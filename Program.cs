@@ -5,6 +5,14 @@ using Newtonsoft.Json;
 
 namespace RiderProjects
 {
+    internal class DebugListener : IDebugListener
+    {
+        public void WriteLine(string category, string msg)
+        {
+            Console.WriteLine("MyListener - {0}: {1}", category, msg);
+        }
+    }
+
     internal static class Program
     {
         private static SteamClient _steamClient;
@@ -17,6 +25,9 @@ namespace RiderProjects
 
         private static void Main(string[] args)
         {
+            DebugLog.AddListener(new DebugListener());
+            DebugLog.Enabled = true;
+
             _steamClient = new SteamClient();
             _manager = new CallbackManager(_steamClient);
 
