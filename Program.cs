@@ -1,6 +1,5 @@
 ﻿using System;
 using SteamKit2;
-using SteamKit2.Internal; // this namespace stores the generated protobuf message structures
 using Newtonsoft.Json;
 
 namespace RiderProjects
@@ -26,7 +25,7 @@ namespace RiderProjects
         private static void Main(string[] args)
         {
             DebugLog.AddListener(new DebugListener());
-            DebugLog.Enabled = true;
+            DebugLog.Enabled = false;
 
             _steamClient = new SteamClient();
             _manager = new CallbackManager(_steamClient);
@@ -96,6 +95,8 @@ namespace RiderProjects
             }
 
             Console.WriteLine("Logged in");
+
+            _steamApps.PICSGetChangesSince(4484528, true, true);
 
             //_steamUser.LogOff();
         }
