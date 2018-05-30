@@ -1,12 +1,16 @@
 ﻿using System;
-using Newtonsoft.Json;
+using System.IO;
 using SteamKit2;
+using System.Threading.Tasks;
+using System.Timers;
 
 namespace SteamProxy
 {
     public class Steam
     {
         public uint PreviousChangeNumber;
+
+        private bool IsLoggedOn = false;
 
         private SteamClient _steamClient;
         private CallbackManager _manager;
@@ -37,18 +41,43 @@ namespace SteamProxy
 
             _manager.Subscribe<SteamApps.PICSChangesCallback>(OnPicsChanges);
             _manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnPicsInfo);
-
-            while (_isRunning)
-            {
-                // in order for the callbacks to get routed, they need to be handled by the manager
-                _manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
-            }
         }
 
-        public void Connect()
+        public void Start()
         {
+            Task.Run(() => DoTheThingAsync());
+            
+
             _isRunning = true;
             _steamClient.Connect();
+
+
+            
+            Task.Run(async () =>
+            {
+                while (_isRunning)
+                {
+                    _manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
+
+                    if (IsLoggedOn)
+                    {
+                        _steamApps.PICSGetChangesSince(PreviousChangeNumber, true, true);
+                        /await Task.Delay(200);
+                    }
+                }
+            });
+        }
+        
+        public async void DoTheThingAsync()
+        {
+            Console.Write("DONE2");
+        }
+
+        public void UpdateChangeNumber(uint number)
+        {
+            PreviousChangeNumber = number;
+
+            File.WriteAllText(ChangeFetcher.LastChangeFile, Convert.ToString(number));
         }
 
         private void OnConnected(SteamClient.ConnectedCallback callback)
@@ -67,10 +96,6 @@ namespace SteamProxy
             }
 
             Console.WriteLine("Logged in");
-
-            _steamApps.PICSGetChangesSince(4484615, true, true);
-
-            //_steamUser.LogOff();
         }
 
         private void OnPicsChanges(SteamApps.PICSChangesCallback callback)
@@ -85,8 +110,7 @@ namespace SteamProxy
                 _steamApps.PICSGetProductInfo(null, key.ID, false);
             }
 
-            var json = JsonConvert.SerializeObject(callback);
-            Rabbit.Produce(json);
+            Rabbit.Produce(callback);
         }
 
         private void OnPicsInfo(SteamApps.PICSProductInfoCallback callback)
@@ -103,7 +127,6 @@ namespace SteamProxy
         private void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
             Console.WriteLine("Disconnected");
-            _isRunning = false;
         }
     }
 

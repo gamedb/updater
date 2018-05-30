@@ -1,15 +1,16 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace SteamProxy
 {
     internal static class ChangeFetcher
     {
-        private const string LastChangeFile = "last-changenumber.txt";
+        public const string LastChangeFile = "last-changenumber.txt";
 
         private static void Main(string[] args)
         {
-            //var steam = new Steam();
+            var steam = new Steam();
 
             if (File.Exists(LastChangeFile))
             {
@@ -21,11 +22,9 @@ namespace SteamProxy
                 Console.WriteLine("no file");
             }
 
-            File.WriteAllText(LastChangeFile, "123");
+            steam.Start();
 
-            //steam.Connect();
-
-            //Console.WriteLine(steam.PreviousChangeNumber);
+            Console.WriteLine(steam.PreviousChangeNumber);
         }
     }
 }

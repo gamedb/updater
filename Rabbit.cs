@@ -2,36 +2,30 @@
 using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using Newtonsoft.Json;
 
 namespace SteamProxy
 {
     public static class Rabbit
     {
-        public static void Produce(string data)
+        const string queueAppIds = "app-ids";
+        const string queueAppDatas = "app-datas";
+        const string queuePackageIds = "package-ids";
+        const string queuePackageDatas = "package-datas";
+
+        public static void Produce(string queue, object data)
         {
             var factory = new ConnectionFactory {HostName = "localhost"};
 
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                const string name = "pics-test";
+                channel.QueueDeclare(queue, true, false, false, null);
 
-                channel.QueueDeclare(
-                    queue: name,
-                    durable: true,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null
-                );
+                var json = JsonConvert.SerializeObject(data);
+                var bytes = Encoding.UTF8.GetBytes(json);
 
-                var body = Encoding.UTF8.GetBytes(data);
-
-                channel.BasicPublish(
-                    exchange: "",
-                    routingKey: name,
-                    basicProperties: null,
-                    body: body
-                );
+                channel.BasicPublish("", queue, null, bytes);
 
                 Console.WriteLine("[x] Sent to Rabbit");
             }
@@ -39,15 +33,11 @@ namespace SteamProxy
 
         public static void Consume()
         {
-            var factory = new ConnectionFactory() {HostName = "localhost"};
+            var factory = new ConnectionFactory {HostName = "localhost"};
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.QueueDeclare(queue: "hello",
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null);
+                channel.QueueDeclare("hello", false, false, false, null);
 
                 var consumer = new EventingBasicConsumer(channel);
                 consumer.Received += (model, ea) =>
@@ -56,9 +46,7 @@ namespace SteamProxy
                     var message = Encoding.UTF8.GetString(body);
                     Console.WriteLine(" [x] Received {0}", message);
                 };
-                channel.BasicConsume(queue: "hello",
-                    autoAck: true,
-                    consumer: consumer);
+                channel.BasicConsume("hello", true, consumer);
 
                 Console.WriteLine(" Press [enter] to exit.");
                 Console.ReadLine();
