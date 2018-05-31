@@ -4,7 +4,7 @@
     {
         private static void Main(string[] args)
         {
-            var steam = new Steam();
+            var steam = new Steam(false);
         }
     }
 }

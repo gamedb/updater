@@ -10,9 +10,10 @@ namespace SteamProxy
     {
         private const string LastChangeFile = "last-changenumber.txt";
 
-        public uint PreviousChangeNumber;
+        private uint PreviousChangeNumber;
 
-        private bool IsLoggedOn = false;
+        private bool _isLoggedOn = false;
+        private bool _isRunning;
 
         private SteamClient _steamClient;
         private CallbackManager _manager;
@@ -20,14 +21,13 @@ namespace SteamProxy
         private SteamUser _steamUser;
         private SteamApps _steamApps;
 
-
-        private bool _isRunning;
-
-        public Steam()
+        public Steam(bool debug)
         {
+            // Debug
             DebugLog.AddListener(new DebugListener());
-            DebugLog.Enabled = false;
+            DebugLog.Enabled = debug;
 
+            // Setup client
             _steamClient = new SteamClient();
             _manager = new CallbackManager(_steamClient);
 
@@ -74,16 +74,16 @@ namespace SteamProxy
             timer2.Start();
         }
 
-        public void CheckForChanges(object obj, EventArgs args)
+        private void CheckForChanges(object obj, EventArgs args)
         {
             Console.WriteLine("Checking for changes");
-            if (_steamClient.IsConnected && IsLoggedOn)
+            if (_steamClient.IsConnected && _isLoggedOn)
             {
                 _steamApps.PICSGetChangesSince(PreviousChangeNumber, true, true);
             }
         }
 
-        public void RunWaitCallbacks(object obj, EventArgs args)
+        private void RunWaitCallbacks(object obj, EventArgs args)
         {
             _manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
         }
