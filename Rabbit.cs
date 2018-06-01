@@ -8,12 +8,12 @@ namespace SteamProxy
 {
     public static class Rabbit
     {
-        const string queueAppIds = "app-ids";
-        const string queueAppDatas = "app-datas";
-        const string queuePackageIds = "package-ids";
-        const string queuePackageDatas = "package-datas";
+        public const string queueAppIds = "app-ids";
+        public const string queueAppDatas = "app-datas";
+        public const string queuePackageIds = "package-ids";
+        public const string queuePackageDatas = "package-datas";
 
-        public static void Produce(string queue, object data)
+        public static void Produce(string queue, string data)
         {
             var factory = new ConnectionFactory {HostName = "localhost"};
 
@@ -22,8 +22,7 @@ namespace SteamProxy
             {
                 channel.QueueDeclare(queue, true, false, false, null);
 
-                var json = JsonConvert.SerializeObject(data);
-                var bytes = Encoding.UTF8.GetBytes(json);
+                var bytes = Encoding.UTF8.GetBytes(data);
 
                 channel.BasicPublish("", queue, null, bytes);
 

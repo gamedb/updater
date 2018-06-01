@@ -10,16 +10,16 @@ namespace SteamProxy
     {
         private const string LastChangeFile = "last-changenumber.txt";
 
-        private uint PreviousChangeNumber;
+        private uint previousChangeNumber;
 
-        private bool _isLoggedOn = false;
-        private bool _isRunning;
+        private bool isLoggedOn = false;
+        private bool isRunning = false;
 
-        private SteamClient _steamClient;
-        private CallbackManager _manager;
+        private SteamClient steamClient;
+        private CallbackManager manager;
 
-        private SteamUser _steamUser;
-        private SteamApps _steamApps;
+        private SteamUser steamUser;
+        private SteamApps steamApps;
 
         public Steam(bool debug)
         {
@@ -28,21 +28,21 @@ namespace SteamProxy
             DebugLog.Enabled = debug;
 
             // Setup client
-            _steamClient = new SteamClient();
-            _manager = new CallbackManager(_steamClient);
+            steamClient = new SteamClient();
+            manager = new CallbackManager(steamClient);
 
-            _steamUser = _steamClient.GetHandler<SteamUser>();
-            _steamApps = _steamClient.GetHandler<SteamApps>();
+            steamUser = steamClient.GetHandler<SteamUser>();
+            steamApps = steamClient.GetHandler<SteamApps>();
 
             // Callbacks
-            _manager.Subscribe<SteamClient.ConnectedCallback>(OnConnected);
-            _manager.Subscribe<SteamClient.DisconnectedCallback>(OnDisconnected);
+            manager.Subscribe<SteamClient.ConnectedCallback>(OnConnected);
+            manager.Subscribe<SteamClient.DisconnectedCallback>(OnDisconnected);
 
-            _manager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
-            _manager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
+            manager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
+            manager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
 
-            _manager.Subscribe<SteamApps.PICSChangesCallback>(OnPicsChanges);
-            _manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnPicsInfo);
+            manager.Subscribe<SteamApps.PICSChangesCallback>(OnPicsChanges);
+            manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnPicsInfo);
         }
 
         public void Connect()
@@ -50,15 +50,20 @@ namespace SteamProxy
             //
             if (File.Exists(LastChangeFile))
             {
-                PreviousChangeNumber = uint.Parse(File.ReadAllText(LastChangeFile));
+                previousChangeNumber = uint.Parse(File.ReadAllText(LastChangeFile));
             }
             else
             {
-                PreviousChangeNumber = 4500000;
+                previousChangeNumber = 4500000;
             }
 
-            _isRunning = true;
-            _steamClient.Connect();
+            isRunning = true;
+            steamClient.Connect();
+        }
+
+        public void GetApp(uint id)
+        {
+            steamApps.PICSGetProductInfo(id, null, false);
         }
 
         public void StartTimers()
@@ -77,27 +82,20 @@ namespace SteamProxy
         private void CheckForChanges(object obj, EventArgs args)
         {
             Console.WriteLine("Checking for changes");
-            if (_steamClient.IsConnected && _isLoggedOn)
+            if (steamClient.IsConnected && isLoggedOn)
             {
-                _steamApps.PICSGetChangesSince(PreviousChangeNumber, true, true);
+                steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
             }
         }
 
         private void RunWaitCallbacks(object obj, EventArgs args)
         {
-            _manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
-        }
-
-        public void UpdateChangeNumber(uint number)
-        {
-            PreviousChangeNumber = number;
-
-            File.WriteAllText(LastChangeFile, number.ToString());
+            manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
         }
 
         private void OnConnected(SteamClient.ConnectedCallback callback)
         {
-            _steamUser.LogOnAnonymous();
+            steamUser.LogOnAnonymous();
             Console.WriteLine("Connected");
         }
 
@@ -106,7 +104,7 @@ namespace SteamProxy
             if (callback.Result != EResult.OK)
             {
                 Console.WriteLine("Unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult);
-                _isRunning = false;
+                isRunning = false;
                 return;
             }
 
@@ -117,15 +115,16 @@ namespace SteamProxy
         {
             foreach (var key in callback.AppChanges.Values)
             {
-                _steamApps.PICSGetProductInfo(key.ID, null, false);
+                Rabbit.Produce(Rabbit.queueAppIds, key.ID.ToString());
             }
 
             foreach (var key in callback.PackageChanges.Values)
             {
-                _steamApps.PICSGetProductInfo(null, key.ID, false);
+                Rabbit.Produce(Rabbit.queuePackageIds, key.ID.ToString());
             }
 
-            //Rabbit.Produce(callback);
+            previousChangeNumber = callback.CurrentChangeNumber;
+            File.WriteAllText(LastChangeFile, previousChangeNumber.ToString());
         }
 
         private void OnPicsInfo(SteamApps.PICSProductInfoCallback callback)
