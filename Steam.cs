@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using SteamKit2;
-using System.Timers;
 using Newtonsoft.Json;
 
 namespace SteamProxy
@@ -11,21 +10,19 @@ namespace SteamProxy
         private const string LastChangeFile = "last-changenumber.txt";
 
         private uint previousChangeNumber;
-
         private bool isLoggedOn = false;
-        private bool isRunning = false;
 
-        private SteamClient steamClient;
-        private CallbackManager manager;
+        private readonly SteamClient steamClient;
+        private readonly CallbackManager manager;
 
-        private SteamUser steamUser;
-        private SteamApps steamApps;
+        private readonly SteamUser steamUser;
+        private readonly SteamApps steamApps;
 
-        public Steam(bool debug)
+        public Steam()
         {
             // Debug
             DebugLog.AddListener(new DebugListener());
-            DebugLog.Enabled = debug;
+            DebugLog.Enabled = false;
 
             // Setup client
             steamClient = new SteamClient();
@@ -47,17 +44,6 @@ namespace SteamProxy
 
         public void Connect()
         {
-            //
-            if (File.Exists(LastChangeFile))
-            {
-                previousChangeNumber = uint.Parse(File.ReadAllText(LastChangeFile));
-            }
-            else
-            {
-                previousChangeNumber = 4500000;
-            }
-
-            isRunning = true;
             steamClient.Connect();
         }
 
@@ -66,29 +52,28 @@ namespace SteamProxy
             steamApps.PICSGetProductInfo(id, null, false);
         }
 
-        public void StartTimers()
+        public void CheckForChanges(object obj, EventArgs args)
         {
-            var timer1 = new Timer();
-            timer1.Elapsed += CheckForChanges;
-            timer1.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
-            timer1.Start();
-
-            var timer2 = new Timer();
-            timer2.Elapsed += RunWaitCallbacks;
-            timer1.Interval = TimeSpan.FromSeconds(1).TotalMilliseconds;
-            timer2.Start();
-        }
-
-        private void CheckForChanges(object obj, EventArgs args)
-        {
-            Console.WriteLine("Checking for changes");
-            if (steamClient.IsConnected && isLoggedOn)
+            if (!steamClient.IsConnected || !isLoggedOn)
             {
-                steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
+                return;
             }
+
+            Console.WriteLine("Checking for changes");
+
+            if (previousChangeNumber == 0 && File.Exists(LastChangeFile))
+            {
+                previousChangeNumber = uint.Parse(File.ReadAllText(LastChangeFile));
+            }
+            else if (previousChangeNumber == 0)
+            {
+                previousChangeNumber = 4500000;
+            }
+
+            steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
         }
 
-        private void RunWaitCallbacks(object obj, EventArgs args)
+        public void RunWaitCallbacks(object obj, EventArgs args)
         {
             manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
         }
@@ -104,7 +89,6 @@ namespace SteamProxy
             if (callback.Result != EResult.OK)
             {
                 Console.WriteLine("Unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult);
-                isRunning = false;
                 return;
             }
 
@@ -113,6 +97,11 @@ namespace SteamProxy
 
         private void OnPicsChanges(SteamApps.PICSChangesCallback callback)
         {
+            if (previousChangeNumber == callback.CurrentChangeNumber)
+            {
+                return;
+            }
+
             foreach (var key in callback.AppChanges.Values)
             {
                 Rabbit.Produce(Rabbit.queueAppIds, key.ID.ToString());
