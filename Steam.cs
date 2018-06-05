@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Xml.Schema;
 using SteamKit2;
 using Newtonsoft.Json;
 
@@ -37,6 +38,7 @@ namespace SteamProxy
 
             manager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
             manager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
+            manager.Subscribe<SteamUser.AccountInfoCallback>(OnAccountInfo);
 
             manager.Subscribe<SteamApps.PICSChangesCallback>(OnPicsChanges);
             manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnPicsInfo);
@@ -76,6 +78,11 @@ namespace SteamProxy
         public void RunWaitCallbacks(object obj, EventArgs args)
         {
             manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
+        }
+
+        public void GetPlayer(UInt64 id)
+        {
+//            SteamUser.
         }
 
         private void OnConnected(SteamClient.ConnectedCallback callback)
@@ -129,6 +136,12 @@ namespace SteamProxy
         private void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
             Console.WriteLine("Disconnected");
+        }
+
+        private void OnAccountInfo(SteamUser.AccountInfoCallback callback)
+        {
+            Console.WriteLine("Player found");
+            Console.WriteLine(callback);
         }
     }
 
