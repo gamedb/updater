@@ -45,7 +45,7 @@ namespace SteamProxy
             manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnPicsInfo);
         }
 
-        public static async void start()
+        public static async void startChanges()
         {
             var steam = new Steam();
             steam.Connect();

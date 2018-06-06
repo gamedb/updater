@@ -13,10 +13,10 @@ namespace SteamProxy
             Log.Setup();
 
             // PICS
-            Steam.start();
+            Steam.startChanges();
 
             // Consumers
-            AbstractConsumer.startConsumers();
+            Rabbit.startConsumers();
 
             while (true)
             {
