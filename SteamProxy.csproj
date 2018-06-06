@@ -9,6 +9,5 @@
     <PackageReference Include="RabbitMQ.Client" Version="5.0.1" />
     <PackageReference Include="Rollbar" Version="1.4.0" />
     <PackageReference Include="SteamKit2" Version="2.0.0" />
-    <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
   </ItemGroup>
 </Project>

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Xml.Schema;
 using SteamKit2;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
+using System.Timers;
 
 namespace SteamProxy
 {
@@ -44,8 +45,27 @@ namespace SteamProxy
             manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnPicsInfo);
         }
 
+        public static async void start()
+        {
+            var steam = new Steam();
+            steam.Connect();
+
+            var timer1 = new Timer();
+            timer1.Elapsed += steam.CheckForChanges;
+            timer1.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
+            timer1.Start();
+
+            var timer2 = new Timer();
+            timer2.Elapsed += steam.RunWaitCallbacks;
+            timer2.Interval = TimeSpan.FromSeconds(1).TotalMilliseconds;
+            timer2.Start();
+
+            await Task.Yield();
+        }
+
         public void Connect()
         {
+            Console.WriteLine("Connecting");
             steamClient.Connect();
         }
 
@@ -80,19 +100,18 @@ namespace SteamProxy
             manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
         }
 
-        public void GetPlayer(UInt64 id)
-        {
-//            SteamUser.
-        }
-
         private void OnConnected(SteamClient.ConnectedCallback callback)
         {
-            steamUser.LogOnAnonymous();
             Console.WriteLine("Connected");
+
+            Console.WriteLine("Logging On");
+            steamUser.LogOnAnonymous();
         }
 
         private void OnLoggedOn(SteamUser.LoggedOnCallback callback)
         {
+            Console.WriteLine("Logged On");
+
             if (callback.Result != EResult.OK)
             {
                 Console.WriteLine("Unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult);
