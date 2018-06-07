@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace SteamProxy
 {
@@ -6,10 +7,6 @@ namespace SteamProxy
     {
         private static void Main(string[] args)
         {
-            
-            Console.WriteLine(args);
-            
-            
             // Rollbar
             Log.setup();
 
@@ -19,9 +16,8 @@ namespace SteamProxy
             // Consumers
             Rabbit.startConsumers();
 
-            while (true)
-            {
-            }
+            // Block thread
+            Thread.Sleep(Timeout.Infinite);
         }
     }
 }

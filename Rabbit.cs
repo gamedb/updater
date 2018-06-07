@@ -13,11 +13,13 @@ namespace SteamProxy
         public const string queuePackageIds = "package-ids";
         public const string queuePackageDatas = "package-datas";
 
+        private const string append = "steam-proxy-";
+
         private readonly string queueName;
 
         private Rabbit(string name)
         {
-            queueName = "STEAM_PROXY_" + name;
+            queueName = append + name;
         }
 
         public static void startConsumers()
@@ -26,7 +28,7 @@ namespace SteamProxy
             {
                 Thread.CurrentThread.IsBackground = true;
 
-                var apps = new Rabbit("app-ids");
+                var apps = new Rabbit(queueAppIds);
                 apps.Consume();
             }).Start();
 
@@ -34,7 +36,7 @@ namespace SteamProxy
             {
                 Thread.CurrentThread.IsBackground = true;
 
-                var packages = new Rabbit("package-ids");
+                var packages = new Rabbit(queuePackageIds);
                 packages.Consume();
             }).Start();
         }
@@ -49,7 +51,6 @@ namespace SteamProxy
             };
 
             var connection = factory.CreateConnection();
-            connection.AutoClose = false;
             var channel = connection.CreateModel();
 
             return (connection, channel);
@@ -61,11 +62,11 @@ namespace SteamProxy
             var connection = x.Item1;
             var channel = x.Item2;
 
-            channel.QueueDeclare(queue, true, false, false, null);
+            channel.QueueDeclare(append + queue, true, false, false, null);
 
             var bytes = Encoding.UTF8.GetBytes(data);
 
-            channel.BasicPublish("", queue, null, bytes);
+            channel.BasicPublish("", append + queue, null, bytes);
 
             Console.WriteLine("Sent to Rabbit: {0}", data);
 
@@ -75,28 +76,23 @@ namespace SteamProxy
 
         private void Consume()
         {
-            while (true)
+            Console.WriteLine("Consuming " + queueName);
+            var x = getConnection();
+            var connection = x.Item1;
+            var channel = x.Item2;
+
+            connection.ConnectionShutdown += (s, e) => { connection.Dispose(); };
+
+            channel.QueueDeclare(queueName, true, false, false, null);
+
+            var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += (model, ea) =>
             {
-                Console.WriteLine("Connecting to Rabbit");
-                var x = getConnection();
-                var connection = x.Item1;
-                var channel = x.Item2;
+                var message = Encoding.UTF8.GetString(ea.Body);
+                Console.WriteLine("Read Rabbit message: {0}", message);
+            };
 
-                connection.ConnectionShutdown += (s, e) => { connection.Dispose(); };
-
-                channel.QueueDeclare(queueName, false, false, false, null);
-
-                var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (model, ea) =>
-                {
-                    var message = Encoding.UTF8.GetString(ea.Body);
-                    Console.WriteLine("Read Rabbit message: {0}", message);
-                };
-
-                channel.BasicConsume(queueName, true, consumer);
-
-                break;
-            }
+            channel.BasicConsume(queueName, true, consumer);
         }
     }
 }
