@@ -13,9 +13,7 @@ namespace SteamProxy
         public const string queuePackageIds = "package-ids";
         public const string queuePackageDatas = "package-datas";
 
-        private static IConnection connection;
-        private static IModel channel;
-        private string queueName;
+        private readonly string queueName;
 
         public Rabbit(string name)
         {
@@ -29,7 +27,6 @@ namespace SteamProxy
                 Thread.CurrentThread.IsBackground = true;
 
                 var apps = new Rabbit("app-ids");
-                apps
             }).Start();
 
             new Thread(() =>
@@ -40,39 +37,35 @@ namespace SteamProxy
             }).Start();
         }
 
-        protected void getConnection()
+        public static (IConnection, IModel) getConnection()
         {
-            if (connection == null || channel == null)
-            {
-                var factory = new ConnectionFactory {HostName = "localhost"};
+            var factory = new ConnectionFactory {HostName = "localhost"};
+            var connection = factory.CreateConnection();
+            var channel = connection.CreateModel();
 
-                connection = factory.CreateConnection();
-                channel = connection.CreateModel();
-                
-                // connection.ConnectionShutdown += // todo
-            }
+            // connection.ConnectionShutdown += // todo
+
+            return (connection, channel);
         }
 
         public static void Produce(string queue, string data)
         {
-            var factory = new ConnectionFactory {HostName = "localhost"};
+            var channel = getConnection().Item2;
 
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
-            {
-                channel.QueueDeclare(queue, true, false, false, null);
+            channel.QueueDeclare(queue, true, false, false, null);
 
-                var bytes = Encoding.UTF8.GetBytes(data);
+            var bytes = Encoding.UTF8.GetBytes(data);
 
-                channel.BasicPublish("", queue, null, bytes);
+            channel.BasicPublish("", queue, null, bytes);
 
-                Console.WriteLine("[x] Sent to Rabbit");
-            }
+            Console.WriteLine("[x] Sent to Rabbit");
         }
 
-        public static void Consume()
+        public void Consume()
         {
-            channel.QueueDeclare("hello", false, false, false, null);
+            var channel = getConnection().Item2;
+
+            channel.QueueDeclare(queueName, false, false, false, null);
 
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (model, ea) =>
@@ -81,6 +74,7 @@ namespace SteamProxy
                 var message = Encoding.UTF8.GetString(body);
                 Console.WriteLine(" [x] Received {0}", message);
             };
+            
             channel.BasicConsume("hello", true, consumer);
 
             Console.WriteLine(" Press [enter] to exit.");

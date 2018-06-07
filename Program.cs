@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Timers;
-using SteamProxy.Consumers;
 using System.Threading.Tasks; 
 
 namespace SteamProxy
