@@ -8,7 +8,7 @@ namespace SteamProxy
         private const string key = "STEAM_PROXY_ROLLBAR_PRIVATE";
         private const string env = "ENV";
 
-        public static void Setup()
+        public static void setup()
         {
             var rollbarKey = Environment.GetEnvironmentVariable(key);
             var environment = Environment.GetEnvironmentVariable(env);

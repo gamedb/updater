@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Timers;
-using System.Threading.Tasks; 
 
 namespace SteamProxy
 {
@@ -8,10 +6,14 @@ namespace SteamProxy
     {
         private static void Main(string[] args)
         {
+            
+            Console.WriteLine(args);
+            
+            
             // Rollbar
-            Log.Setup();
+            Log.setup();
 
-            // PICS
+            // Poll for new changes
             Steam.startChanges();
 
             // Consumers

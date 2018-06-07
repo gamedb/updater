@@ -12,7 +12,7 @@ namespace SteamProxy
         private const string LastChangeFile = "last-changenumber.txt";
 
         private uint previousChangeNumber;
-        private bool isLoggedOn = false;
+        private bool isLoggedOn;
 
         private readonly SteamClient steamClient;
         private readonly CallbackManager manager;
@@ -65,7 +65,6 @@ namespace SteamProxy
 
         public void Connect()
         {
-            Console.WriteLine("Connecting");
             steamClient.Connect();
         }
 
@@ -81,8 +80,6 @@ namespace SteamProxy
                 return;
             }
 
-            Console.WriteLine("Checking for changes");
-
             if (previousChangeNumber == 0 && File.Exists(LastChangeFile))
             {
                 previousChangeNumber = uint.Parse(File.ReadAllText(LastChangeFile));
@@ -91,6 +88,8 @@ namespace SteamProxy
             {
                 previousChangeNumber = 4500000;
             }
+
+            Console.WriteLine("Checking for changes: " + previousChangeNumber);
 
             steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
         }
@@ -103,15 +102,11 @@ namespace SteamProxy
         private void OnConnected(SteamClient.ConnectedCallback callback)
         {
             Console.WriteLine("Connected");
-
-            Console.WriteLine("Logging On");
             steamUser.LogOnAnonymous();
         }
 
         private void OnLoggedOn(SteamUser.LoggedOnCallback callback)
         {
-            Console.WriteLine("Logged On");
-
             if (callback.Result != EResult.OK)
             {
                 Console.WriteLine("Unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult);
@@ -119,6 +114,8 @@ namespace SteamProxy
             }
 
             Console.WriteLine("Logged in");
+
+            isLoggedOn = true;
         }
 
         private void OnPicsChanges(SteamApps.PICSChangesCallback callback)
@@ -149,17 +146,19 @@ namespace SteamProxy
 
         private void OnLoggedOff(SteamUser.LoggedOffCallback callback)
         {
-            Console.WriteLine("Logged off of Steam: {0}", callback.Result);
+            Console.WriteLine("Logged off");
+            isLoggedOn = false;
         }
 
         private void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
-            Console.WriteLine("Disconnected");
+            isLoggedOn = false;
+            Console.WriteLine("Disconnected from Steam");
+            Connect();
         }
 
         private void OnAccountInfo(SteamUser.AccountInfoCallback callback)
         {
-            Console.WriteLine("Player found");
             Console.WriteLine(callback);
         }
     }
