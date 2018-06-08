@@ -11,7 +11,7 @@ namespace SteamProxy
             Log.setup();
 
             // Poll for new changes
-            Steam.startChanges();
+            Steam.startSteam();
 
             // Consumers
             Rabbit.startConsumers();

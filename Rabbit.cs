@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -6,7 +7,7 @@ using System.Threading;
 
 namespace SteamProxy
 {
-    public class Rabbit
+    public static class Rabbit
     {
         public const string queueAppIds = "app-ids";
         public const string queueAppDatas = "app-datas";
@@ -15,30 +16,23 @@ namespace SteamProxy
 
         private const string append = "steam-proxy-";
 
-        private readonly string queueName;
-
-        private Rabbit(string name)
-        {
-            queueName = append + name;
-        }
-
         public static void startConsumers()
         {
-            new Thread(() =>
+            var consumers = new Dictionary<string, Func<BasicDeliverEventArgs, bool>>
             {
-                Thread.CurrentThread.IsBackground = true;
+                {queueAppIds, ConsumeAppID},
+                {queuePackageIds, ConsumePackageID}
+            };
 
-                var apps = new Rabbit(queueAppIds);
-                apps.Consume();
-            }).Start();
-
-            new Thread(() =>
+            foreach (var entry in consumers)
             {
-                Thread.CurrentThread.IsBackground = true;
+                new Thread(() =>
+                {
+                    Thread.CurrentThread.IsBackground = true;
 
-                var packages = new Rabbit(queuePackageIds);
-                packages.Consume();
-            }).Start();
+                    Consume(entry.Key, entry.Value);
+                }).Start();
+            }
         }
 
         private static (IConnection, IModel) getConnection()
@@ -65,34 +59,42 @@ namespace SteamProxy
             channel.QueueDeclare(append + queue, true, false, false, null);
 
             var bytes = Encoding.UTF8.GetBytes(data);
-
             channel.BasicPublish("", append + queue, null, bytes);
-
-            Console.WriteLine("Sent to Rabbit: {0}", data);
 
             channel.Close();
             connection.Close();
         }
 
-        private void Consume()
+        private static void Consume(string queue, Func<BasicDeliverEventArgs, bool> callback)
         {
-            Console.WriteLine("Consuming " + queueName);
+            Console.WriteLine("Consuming " + queue);
+
             var x = getConnection();
             var connection = x.Item1;
             var channel = x.Item2;
 
             connection.ConnectionShutdown += (s, e) => { connection.Dispose(); };
 
-            channel.QueueDeclare(queueName, true, false, false, null);
+            channel.QueueDeclare(queue, true, false, false, null);
 
             var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += (model, ea) =>
-            {
-                var message = Encoding.UTF8.GetString(ea.Body);
-                Console.WriteLine("Read Rabbit message: {0}", message);
-            };
+            consumer.Received += (model, ea) => { callback(ea); };
 
-            channel.BasicConsume(queueName, true, consumer);
+            channel.BasicConsume(queue, true, consumer);
+        }
+
+        private static bool ConsumeAppID(BasicDeliverEventArgs msg)
+        {
+            var msgBody = Encoding.UTF8.GetString(msg.Body);
+            Steam.steamApps.PICSGetProductInfo(Convert.ToUInt32(msgBody), null, false);
+            return true;
+        }
+
+        private static bool ConsumePackageID(BasicDeliverEventArgs msg)
+        {
+            var msgBody = Encoding.UTF8.GetString(msg.Body);
+            Steam.steamApps.PICSGetProductInfo(null, Convert.ToUInt32(msgBody), false);
+            return true;
         }
     }
 }
