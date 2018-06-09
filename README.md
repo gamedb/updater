@@ -1,3 +1,5 @@
-# steam-proxy
+# steam-updater
 
-An app to fetch information from Steam and send the data to Rabbit.
+An app to periodically fetch app information from Steam and send to Rabbit.
+
+It can also recieve reqeuests to get app information via Rabbit.
