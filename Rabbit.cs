@@ -10,9 +10,8 @@ namespace SteamProxy
     public static class Rabbit
     {
         public const string queueAppIds = "app-ids";
-        public const string queueAppDatas = "app-datas";
         public const string queuePackageIds = "package-ids";
-        public const string queuePackageDatas = "package-datas";
+        public const string queueProductData = "product-data";
 
         private const string append = "steam-proxy-";
 
@@ -30,7 +29,7 @@ namespace SteamProxy
                 {
                     Thread.CurrentThread.IsBackground = true;
 
-                    Consume(entry.Key, entry.Value);
+                    Consume(append + entry.Key, entry.Value);
                 }).Start();
             }
         }
@@ -73,7 +72,11 @@ namespace SteamProxy
             var connection = x.Item1;
             var channel = x.Item2;
 
-            connection.ConnectionShutdown += (s, e) => { connection.Dispose(); };
+            connection.ConnectionShutdown += (s, e) =>
+            {
+                connection.Dispose();
+                Consume(queue, callback);
+            };
 
             channel.QueueDeclare(queue, true, false, false, null);
 
