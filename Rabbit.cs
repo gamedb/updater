@@ -9,11 +9,13 @@ namespace SteamProxy
 {
     public static class Rabbit
     {
-        public const string queueAppIds = "app-ids";
-        public const string queuePackageIds = "package-ids";
-        public const string queueProductData = "product-data";
+        public const string queueAppId = "App_ID";
+        public const string queuePackageId = "Package_ID";
 
-        private const string append = "steam-proxy-";
+        public const string queueAppData = "App_Data";
+        public const string queuePackageData = "Package_Data";
+
+        private const string append = "Steam_Updater_";
 
         public static void startConsumers()
         {
@@ -81,7 +83,7 @@ namespace SteamProxy
             channel.QueueDeclare(queue, true, false, false, null);
 
             var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += (model, ea) => { callback(ea); };
+            consumer.Received += delegate(object model, BasicDeliverEventArgs ea) { callback(ea); };
 
             channel.BasicConsume(queue, true, consumer);
         }
@@ -89,14 +91,26 @@ namespace SteamProxy
         private static bool ConsumeAppID(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
-            Steam.steamApps.PICSGetProductInfo(Convert.ToUInt32(msgBody), null, false);
+            var ids = msgBody.Split(",");
+            if (ids.Length > 0)
+            {
+                var idInts = Array.ConvertAll(ids, Convert.ToUInt32);
+                Steam.steamApps.PICSGetProductInfo(idInts, null, false);
+            }
+
             return true;
         }
 
         private static bool ConsumePackageID(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
-            Steam.steamApps.PICSGetProductInfo(null, Convert.ToUInt32(msgBody), false);
+            var ids = msgBody.Split(",");
+            if (ids.Length > 0)
+            {
+                var idInts = Array.ConvertAll(ids, Convert.ToUInt32);
+                Steam.steamApps.PICSGetProductInfo(null, idInts, false);
+            }
+
             return true;
         }
     }

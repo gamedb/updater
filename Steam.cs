@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using SteamKit2;
 using Newtonsoft.Json;
 using System.Timers;
@@ -84,6 +85,11 @@ namespace SteamProxy
 
         private static void OnPicsChanges(SteamApps.PICSChangesCallback callback)
         {
+            if (previousChangeNumber == callback.CurrentChangeNumber)
+            {
+                return;
+            }
+
             Console.WriteLine(
                 "Change {0:N0} - {1:N0} ({2:N0} changes) {3} apps, {4} packages",
                 callback.LastChangeNumber,
@@ -93,20 +99,8 @@ namespace SteamProxy
                 callback.PackageChanges.Count
             );
 
-            if (previousChangeNumber == callback.CurrentChangeNumber)
-            {
-                return;
-            }
-
-            foreach (var key in callback.AppChanges.Values)
-            {
-                Rabbit.Produce(Rabbit.queueAppIds, key.ID.ToString());
-            }
-
-            foreach (var key in callback.PackageChanges.Values)
-            {
-                Rabbit.Produce(Rabbit.queuePackageIds, key.ID.ToString());
-            }
+            Rabbit.Produce(Rabbit.queueAppId, string.Join(",", callback.AppChanges.Keys.ToList()));
+            Rabbit.Produce(Rabbit.queuePackageId, string.Join(",", callback.PackageChanges.Keys.ToList()));
 
             previousChangeNumber = callback.CurrentChangeNumber;
             File.WriteAllText(LastChangeFile, previousChangeNumber.ToString());
@@ -114,6 +108,11 @@ namespace SteamProxy
 
         private static void OnPicsInfo(SteamApps.PICSProductInfoCallback callback)
         {
+            // todo, look apps, add each one to queue, same with packages
+            if (callback)
+            {
+                
+            }
             Rabbit.Produce(Rabbit.queueProductData, JsonConvert.SerializeObject(callback));
         }
 
@@ -130,7 +129,7 @@ namespace SteamProxy
 
             if (quitOnDisconnect)
             {
-                Environment.Exit(1);
+                Environment.Exit(0);
             }
 
             steamClient.Connect();
