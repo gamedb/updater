@@ -76,7 +76,7 @@ namespace SteamUpdater.Consumers
 
         private void Consume(string queue)
         {
-            Console.WriteLine("Consuming " + queue);
+            Log.GoogleInfo("Consuming " + queue);
 
             var x = getConnection();
             var connection = x.Item1;

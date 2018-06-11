@@ -8,7 +8,7 @@ namespace SteamUpdater
         private static void Main(string[] args)
         {
             // Rollbar
-            Log.setup();
+            Log.setupRollbar();
 
             // Poll for new changes
             Steam.startSteam(false);

@@ -15,7 +15,7 @@ namespace SteamUpdater.Consumers
             {
                 uint[] empty = { };
                 var idInts = Array.ConvertAll(ids, Convert.ToUInt32);
-                Steam.steamApps.PICSGetProductInfo(empty, idInts, false, false);
+                Steam.steamApps.PICSGetProductInfo(empty, idInts, false);
             }
         }
     }

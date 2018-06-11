@@ -90,20 +90,22 @@ namespace SteamUpdater
                 return;
             }
 
-            Console.WriteLine(
-                "Change {0:N0} - {1:N0} ({2:N0} changes) {3} apps, {4} packages",
-                callback.LastChangeNumber,
-                callback.CurrentChangeNumber,
-                callback.CurrentChangeNumber - callback.LastChangeNumber,
-                callback.AppChanges.Count,
-                callback.PackageChanges.Count
+            Log.GoogleInfo(
+                String.Format(
+                    "Change {0:N0} - {1:N0} ({2:N0} changes) {3} apps, {4} packages",
+                    callback.LastChangeNumber,
+                    callback.CurrentChangeNumber,
+                    callback.CurrentChangeNumber - callback.LastChangeNumber,
+                    callback.AppChanges.Count,
+                    callback.PackageChanges.Count
+                )
             );
 
             Consumers.AbstractConsumer.Produce(
                 Consumers.AbstractConsumer.queueAppId,
                 string.Join(",", callback.AppChanges.Keys.ToList())
             );
-            
+
             Consumers.AbstractConsumer.Produce(
                 Consumers.AbstractConsumer.queuePackageId,
                 string.Join(",", callback.PackageChanges.Keys.ToList())
@@ -134,13 +136,13 @@ namespace SteamUpdater
 
         private static void OnConnected(SteamClient.ConnectedCallback callback)
         {
-            Console.WriteLine("Connected to Steam");
+            Log.GoogleInfo("Connected to Steam");
             steamUser.LogOnAnonymous();
         }
 
         private static void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
-            Console.WriteLine("Disconnected from Steam");
+            Log.GoogleInfo("Disconnected from Steam");
             isLoggedOn = false;
 
             if (quitOnDisconnect)
@@ -155,17 +157,19 @@ namespace SteamUpdater
         {
             if (callback.Result != EResult.OK)
             {
-                Console.WriteLine("Unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult);
+                Log.GoogleInfo(
+                    String.Format("Unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult)
+                );
                 return;
             }
 
-            Console.WriteLine("Logged in");
+            Log.GoogleInfo("Logged in");
             isLoggedOn = true;
         }
 
         private static void OnLoggedOff(SteamUser.LoggedOffCallback callback)
         {
-            Console.WriteLine("Logged off");
+            Log.GoogleInfo("Logged off");
             isLoggedOn = false;
 
             if (quitOnDisconnect)
@@ -179,7 +183,7 @@ namespace SteamUpdater
     {
         public void WriteLine(string category, string msg)
         {
-            Console.WriteLine("MyListener - {0}: {1}", category, msg);
+            Log.GoogleInfo(string.Format("MyListener - {0}: {1}", category, msg));
         }
     }
 }
