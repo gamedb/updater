@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Timers;
@@ -108,12 +108,15 @@ namespace SteamUpdater
 
         private static void OnPicsInfo(SteamApps.PICSProductInfoCallback callback)
         {
-            // todo, look apps, add each one to queue, same with packages
-            if (callback)
+            foreach (var item in callback.Apps)
             {
-                
+                Rabbit.Produce(Rabbit.queueAppData, JsonConvert.SerializeObject(item.Value));
             }
-            Rabbit.Produce(Rabbit.queueProductData, JsonConvert.SerializeObject(callback));
+
+            foreach (var item in callback.Packages)
+            {
+                Rabbit.Produce(Rabbit.queuePackageData, JsonConvert.SerializeObject(item.Value));
+            }
         }
 
         private static void OnConnected(SteamClient.ConnectedCallback callback)
