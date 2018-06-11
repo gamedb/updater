@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Threading;
 
-namespace SteamProxy
+namespace SteamUpdater
 {
     public static class Rabbit
     {
+        // Queue names
         public const string queueAppId = "App_ID";
-        public const string queuePackageId = "Package_ID";
-
         public const string queueAppData = "App_Data";
+        public const string queuePackageId = "Package_ID";
         public const string queuePackageData = "Package_Data";
 
         private const string append = "Steam_Updater_";
@@ -21,8 +21,8 @@ namespace SteamProxy
         {
             var consumers = new Dictionary<string, Func<BasicDeliverEventArgs, bool>>
             {
-                {queueAppIds, ConsumeAppID},
-                {queuePackageIds, ConsumePackageID}
+                {queueAppId, ConsumeAppID},
+                {queuePackageId, ConsumePackageID}
             };
 
             foreach (var entry in consumers)

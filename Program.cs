@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace SteamProxy
+namespace SteamUpdater
 {
     internal static class ChangeFetcher
     {

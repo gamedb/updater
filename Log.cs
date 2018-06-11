@@ -1,7 +1,7 @@
 ﻿using System;
 using Rollbar;
 
-namespace SteamProxy
+namespace SteamUpdater
 {
     public static class Log
     {

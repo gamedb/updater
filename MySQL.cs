@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Xml.Schema;
 using MySql.Data.MySqlClient;
 
-namespace SteamProxy
+namespace SteamUpdater
 {
     public class MySQL
     {

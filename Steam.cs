@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
-using SteamKit2;
-using Newtonsoft.Json;
 using System.Timers;
+using Newtonsoft.Json;
+using SteamKit2;
 
-namespace SteamProxy
+namespace SteamUpdater
 {
     public static class Steam
     {

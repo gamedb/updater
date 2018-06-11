@@ -1,4 +1,4 @@
-﻿namespace SteamProxy.Consumers
+﻿namespace SteamUpdater.Consumers
 {
     public class PackageIDsConsumer : AbstractConsumer
     {

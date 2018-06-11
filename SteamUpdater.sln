@@ -1,7 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2017
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamProxy", "SteamProxy.csproj", "{3270D1ED-D213-4CA1-A257-8DD6CC18B601}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SteamUpdater", "SteamUpdater.csproj", "{3270D1ED-D213-4CA1-A257-8DD6CC18B601}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
