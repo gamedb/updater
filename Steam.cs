@@ -99,8 +99,15 @@ namespace SteamUpdater
                 callback.PackageChanges.Count
             );
 
-            Rabbit.Produce(Rabbit.queueAppId, string.Join(",", callback.AppChanges.Keys.ToList()));
-            Rabbit.Produce(Rabbit.queuePackageId, string.Join(",", callback.PackageChanges.Keys.ToList()));
+            Consumers.AbstractConsumer.Produce(
+                Consumers.AbstractConsumer.queueAppId,
+                string.Join(",", callback.AppChanges.Keys.ToList())
+            );
+            
+            Consumers.AbstractConsumer.Produce(
+                Consumers.AbstractConsumer.queuePackageId,
+                string.Join(",", callback.PackageChanges.Keys.ToList())
+            );
 
             previousChangeNumber = callback.CurrentChangeNumber;
             File.WriteAllText(LastChangeFile, previousChangeNumber.ToString());
@@ -110,12 +117,18 @@ namespace SteamUpdater
         {
             foreach (var item in callback.Apps)
             {
-                Rabbit.Produce(Rabbit.queueAppData, JsonConvert.SerializeObject(item.Value));
+                Consumers.AbstractConsumer.Produce(
+                    Consumers.AbstractConsumer.queueAppData,
+                    JsonConvert.SerializeObject(item.Value)
+                );
             }
 
             foreach (var item in callback.Packages)
             {
-                Rabbit.Produce(Rabbit.queuePackageData, JsonConvert.SerializeObject(item.Value));
+                Consumers.AbstractConsumer.Produce(
+                    Consumers.AbstractConsumer.queuePackageData,
+                    JsonConvert.SerializeObject(item.Value)
+                );
             }
         }
 

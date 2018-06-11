@@ -14,7 +14,7 @@ namespace SteamUpdater
             Steam.startSteam(false);
 
             // Consumers
-            Rabbit.startConsumers();
+            Consumers.AbstractConsumer.startConsumers();
 
             // On quit
             Console.CancelKeyPress += delegate
