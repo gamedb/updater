@@ -7,6 +7,8 @@ namespace SteamUpdater
     {
         private static void Main(string[] args)
         {
+            Console.Title = "Steam Updater";
+
             // Rollbar
             Log.setupRollbar();
 

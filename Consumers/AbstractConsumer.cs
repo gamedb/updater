@@ -14,8 +14,16 @@ namespace SteamUpdater.Consumers
         public const string queueAppData = "App_Data";
         public const string queuePackageId = "Package_ID";
         public const string queuePackageData = "Package_Data";
+        public const string queueChangeData = "Change_Data";
 
         private const string append = "Steam_Updater_";
+
+        private static readonly ConnectionFactory connectionFactory = new ConnectionFactory
+        {
+            HostName = Environment.GetEnvironmentVariable("STEAM_RABBIT_HOST"),
+            UserName = Environment.GetEnvironmentVariable("STEAM_RABBIT_USER"),
+            Password = Environment.GetEnvironmentVariable("STEAM_RABBIT_PASS")
+        };
 
         // Abstracts
         protected abstract void HandleMessage(BasicDeliverEventArgs msg);
@@ -43,6 +51,14 @@ namespace SteamUpdater.Consumers
             }
         }
 
+        private static (IConnection, IModel) getConnection()
+        {
+            var connection = connectionFactory.CreateConnection();
+            var channel = connection.CreateModel();
+
+            return (connection, channel);
+        }
+
         public static void Produce(string queue, string data)
         {
             var x = getConnection();
@@ -56,22 +72,6 @@ namespace SteamUpdater.Consumers
 
             channel.Close();
             connection.Close();
-        }
-
-        //
-        private static (IConnection, IModel) getConnection()
-        {
-            var factory = new ConnectionFactory
-            {
-                HostName = Environment.GetEnvironmentVariable("STEAM_RABBIT_HOST"),
-                UserName = Environment.GetEnvironmentVariable("STEAM_RABBIT_USER"),
-                Password = Environment.GetEnvironmentVariable("STEAM_RABBIT_PASS")
-            };
-
-            var connection = factory.CreateConnection();
-            var channel = connection.CreateModel();
-
-            return (connection, channel);
         }
 
         private void Consume(string queue)
