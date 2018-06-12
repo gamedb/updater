@@ -113,6 +113,11 @@ namespace SteamUpdater
 
             previousChangeNumber = callback.CurrentChangeNumber;
             File.WriteAllText(LastChangeFile, previousChangeNumber.ToString());
+
+            Consumers.AbstractConsumer.Produce(
+                Consumers.AbstractConsumer.queueChangeData,
+                JsonConvert.SerializeObject(callback)
+            );
         }
 
         private static void OnPicsInfo(SteamApps.PICSProductInfoCallback callback)
