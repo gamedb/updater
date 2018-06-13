@@ -76,7 +76,7 @@ namespace SteamUpdater
             }
             else if (previousChangeNumber == 0)
             {
-                previousChangeNumber = 4540000;
+                previousChangeNumber = 4574000;
             }
 
             // Check for new changes
@@ -86,6 +86,8 @@ namespace SteamUpdater
 
         private static void OnPicsChanges(SteamApps.PICSChangesCallback callback)
         {
+            File.WriteAllText("last-changes.json", JsonConvert.SerializeObject(callback));
+
             if (previousChangeNumber == callback.CurrentChangeNumber)
             {
                 return;
