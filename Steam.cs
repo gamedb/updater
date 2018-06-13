@@ -80,7 +80,8 @@ namespace SteamUpdater
             }
 
             // Check for new changes
-            steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
+            steamApps.PICSGetChangesSince(previousChangeNumber, true, false);
+            steamApps.PICSGetChangesSince(previousChangeNumber, false, true);
         }
 
         private static void OnPicsChanges(SteamApps.PICSChangesCallback callback)
