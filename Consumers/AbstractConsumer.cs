@@ -10,11 +10,11 @@ namespace SteamUpdater.Consumers
     public abstract class AbstractConsumer
     {
         // Consts
-        public const string queueAppId = "App_ID";
-        public const string queueAppData = "App_Data";
-        public const string queuePackageId = "Package_ID";
-        public const string queuePackageData = "Package_Data";
-        public const string queueChangeData = "Change_Data";
+        public const string queueApps = "Apps";
+        public const string queueAppsData = "Apps_Data";
+        public const string queuePackages = "Packages";
+        public const string queuePackagesData = "Packages_Data";
+        public const string queueChanges = "Changes";
 
         private const string append = "Steam_Updater_";
 
@@ -33,8 +33,8 @@ namespace SteamUpdater.Consumers
         {
             var consumers = new Dictionary<string, AbstractConsumer>
             {
-                {queueAppId, new AppIDsConsumer()},
-                {queuePackageId, new PackageIDsConsumer()}
+                {queueApps, new AppIDsConsumer()},
+                {queuePackages, new PackageIDsConsumer()}
             };
 
             foreach (var entry in consumers)

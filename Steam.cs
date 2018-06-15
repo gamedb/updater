@@ -86,8 +86,6 @@ namespace SteamUpdater
 
         private static void OnPicsChanges(SteamApps.PICSChangesCallback callback)
         {
-            File.WriteAllText("last-changes.json", JsonConvert.SerializeObject(callback));
-
             if (previousChangeNumber == callback.CurrentChangeNumber)
             {
                 return;
@@ -105,12 +103,12 @@ namespace SteamUpdater
             );
 
             Consumers.AbstractConsumer.Produce(
-                Consumers.AbstractConsumer.queueAppId,
+                Consumers.AbstractConsumer.queueApps,
                 string.Join(",", callback.AppChanges.Keys.ToList())
             );
 
             Consumers.AbstractConsumer.Produce(
-                Consumers.AbstractConsumer.queuePackageId,
+                Consumers.AbstractConsumer.queuePackages,
                 string.Join(",", callback.PackageChanges.Keys.ToList())
             );
 
@@ -118,7 +116,7 @@ namespace SteamUpdater
             File.WriteAllText(LastChangeFile, previousChangeNumber.ToString());
 
             Consumers.AbstractConsumer.Produce(
-                Consumers.AbstractConsumer.queueChangeData,
+                Consumers.AbstractConsumer.queueChanges,
                 JsonConvert.SerializeObject(callback)
             );
         }
@@ -128,7 +126,7 @@ namespace SteamUpdater
             foreach (var item in callback.Apps)
             {
                 Consumers.AbstractConsumer.Produce(
-                    Consumers.AbstractConsumer.queueAppData,
+                    Consumers.AbstractConsumer.queueAppsData,
                     JsonConvert.SerializeObject(item.Value)
                 );
             }
@@ -136,7 +134,7 @@ namespace SteamUpdater
             foreach (var item in callback.Packages)
             {
                 Consumers.AbstractConsumer.Produce(
-                    Consumers.AbstractConsumer.queuePackageData,
+                    Consumers.AbstractConsumer.queuePackagesData,
                     JsonConvert.SerializeObject(item.Value)
                 );
             }
