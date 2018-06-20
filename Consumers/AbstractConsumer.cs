@@ -14,7 +14,7 @@ namespace SteamUpdater.Consumers
         public const string queueAppsData = "Apps_Data";
         public const string queuePackages = "Packages";
         public const string queuePackagesData = "Packages_Data";
-        public const string queueChanges = "Changes";
+        public const string queueChanges = "Changes_Data";
 
         private const string append = "Steam_Updater_";
 
