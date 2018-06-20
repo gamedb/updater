@@ -62,6 +62,7 @@ namespace SteamUpdater
             manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
         }
 
+        // If more than 5000, returns 0
         private static void CheckForChanges(object obj, EventArgs args)
         {
             // Get last change ID
