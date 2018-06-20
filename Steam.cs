@@ -117,7 +117,7 @@ namespace SteamUpdater
             File.WriteAllText(LastChangeFile, previousChangeNumber.ToString());
 
             Consumers.AbstractConsumer.Produce(
-                Consumers.AbstractConsumer.queueChanges,
+                Consumers.AbstractConsumer.queueChangesData,
                 JsonConvert.SerializeObject(callback)
             );
         }
