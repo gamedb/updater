@@ -14,6 +14,8 @@ namespace SteamUpdater.Consumers
         public const string queueAppsData = "Apps_Data";
         public const string queuePackages = "Packages";
         public const string queuePackagesData = "Packages_Data";
+        public const string queueProfiles = "Profiles";
+        public const string queueProfilesData = "Profiles_Data";
         public const string queueChangesData = "Changes_Data";
 
         private const string append = "Steam_Updater_";
@@ -33,8 +35,9 @@ namespace SteamUpdater.Consumers
         {
             var consumers = new Dictionary<string, AbstractConsumer>
             {
-                {queueApps, new AppIDsConsumer()},
-                {queuePackages, new PackageIDsConsumer()}
+                {queueApps, new AppConsumer()},
+                {queuePackages, new PackageConsumer()},
+                {queueProfiles, new ProfileConsumer()}
             };
 
             foreach (var entry in consumers)

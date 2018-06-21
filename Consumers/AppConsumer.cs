@@ -4,7 +4,7 @@ using RabbitMQ.Client.Events;
 
 namespace SteamUpdater.Consumers
 {
-    public class AppIDsConsumer : AbstractConsumer
+    public class AppConsumer : AbstractConsumer
     {
         protected override void HandleMessage(BasicDeliverEventArgs msg)
         {

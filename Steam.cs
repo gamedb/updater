@@ -20,6 +20,7 @@ namespace SteamUpdater
 
         public static SteamUser steamUser;
         public static SteamApps steamApps;
+        public static SteamFriends steamFriends;
 
         public static void startSteam(bool debug)
         {
@@ -33,16 +34,16 @@ namespace SteamUpdater
 
             steamUser = steamClient.GetHandler<SteamUser>();
             steamApps = steamClient.GetHandler<SteamApps>();
+            steamFriends = steamClient.GetHandler<SteamFriends>();
 
             // Callbacks
             manager.Subscribe<SteamClient.ConnectedCallback>(OnConnected);
             manager.Subscribe<SteamClient.DisconnectedCallback>(OnDisconnected);
-
             manager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
             manager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
-
             manager.Subscribe<SteamApps.PICSChangesCallback>(OnPicsChanges);
-            manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnPicsInfo);
+            manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnProductInfo);
+            manager.Subscribe<SteamFriends.ProfileInfoCallback>(OnProfileInfo);
 
             steamClient.Connect();
 
@@ -81,7 +82,8 @@ namespace SteamUpdater
             }
 
             // Check for new changes
-            steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
+            steamApps.PICSGetChangesSince(previousChangeNumber, true, false);
+            steamApps.PICSGetChangesSince(previousChangeNumber, false, true);
         }
 
         private static void OnPicsChanges(SteamApps.PICSChangesCallback callback)
@@ -121,7 +123,7 @@ namespace SteamUpdater
             );
         }
 
-        private static void OnPicsInfo(SteamApps.PICSProductInfoCallback callback)
+        private static void OnProductInfo(SteamApps.PICSProductInfoCallback callback)
         {
             foreach (var item in callback.Apps)
             {
@@ -138,6 +140,11 @@ namespace SteamUpdater
                     JsonConvert.SerializeObject(item.Value)
                 );
             }
+        }
+
+        private static void OnProfileInfo(SteamFriends.ProfileInfoCallback callback)
+        {
+            Console.WriteLine(callback.RealName);
         }
 
         private static void OnConnected(SteamClient.ConnectedCallback callback)
