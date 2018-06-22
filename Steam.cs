@@ -144,7 +144,8 @@ namespace SteamUpdater
 
         private static void OnProfileInfo(SteamFriends.ProfileInfoCallback callback)
         {
-            Console.WriteLine(callback.RealName);
+            Console.WriteLine("x");
+            Console.WriteLine(JsonConvert.SerializeObject(callback));
         }
 
         private static void OnConnected(SteamClient.ConnectedCallback callback)
@@ -196,7 +197,7 @@ namespace SteamUpdater
     {
         public void WriteLine(string category, string msg)
         {
-            Log.GoogleInfo(string.Format("MyListener - {0}: {1}", category, msg));
+            Log.GoogleInfo(string.Format("Debug - {0}: {1}", category, msg));
         }
     }
 }
