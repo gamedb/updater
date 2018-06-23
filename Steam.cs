@@ -144,14 +144,20 @@ namespace SteamUpdater
 
         private static void OnProfileInfo(SteamFriends.ProfileInfoCallback callback)
         {
-            Console.WriteLine("x");
-            Console.WriteLine(JsonConvert.SerializeObject(callback));
+            Consumers.AbstractConsumer.Produce(
+                Consumers.AbstractConsumer.queueProfilesData,
+                JsonConvert.SerializeObject(callback)
+            );
         }
 
         private static void OnConnected(SteamClient.ConnectedCallback callback)
         {
             Log.GoogleInfo("Connected to Steam");
-            steamUser.LogOnAnonymous();
+            steamUser.LogOn(new SteamUser.LogOnDetails
+            {
+                Username = Environment.GetEnvironmentVariable("STEAM_PROXY_USERNAME"),
+                Password = Environment.GetEnvironmentVariable("STEAM_PROXY_PASSWORD"),
+            });
         }
 
         private static void OnDisconnected(SteamClient.DisconnectedCallback callback)
