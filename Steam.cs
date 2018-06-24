@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Timers;
 using Newtonsoft.Json;
 using SteamKit2;
@@ -170,6 +171,8 @@ namespace SteamUpdater
                 Environment.Exit(0);
             }
 
+            // Try to reconnect
+            Thread.Sleep(TimeSpan.FromSeconds(15));
             steamClient.Connect();
         }
 

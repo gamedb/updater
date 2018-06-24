@@ -9,5 +9,6 @@
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" />
     <PackageReference Include="Rollbar" Version="1.5.0" />
     <PackageReference Include="SteamKit2" Version="2.1.0" />
+    <PackageReference Include="ValveKeyValue" Version="0.2.1.107" />
   </ItemGroup>
 </Project>
