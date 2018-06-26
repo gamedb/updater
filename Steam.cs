@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Timers;
 using Newtonsoft.Json;
 using SteamKit2;
 
@@ -48,12 +47,12 @@ namespace SteamUpdater
 
             steamClient.Connect();
 
-            var timer1 = new Timer();
+            var timer1 = new System.Timers.Timer();
             timer1.Elapsed += RunWaitCallbacks;
             timer1.Interval = TimeSpan.FromSeconds(1).TotalMilliseconds;
             timer1.Start();
 
-            var timer2 = new Timer();
+            var timer2 = new System.Timers.Timer();
             timer2.Elapsed += CheckForChanges;
             timer2.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
             timer2.Start();
