@@ -108,7 +108,7 @@ namespace SteamUpdater.Consumers
                 }
             };
 
-            channel.BasicConsume(queue, true, consumer);
+            channel.BasicConsume(queue, false, consumer);
         }
     }
 }
