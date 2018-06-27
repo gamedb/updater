@@ -42,7 +42,7 @@ namespace SteamUpdater
             manager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
             manager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
             manager.Subscribe<SteamApps.PICSChangesCallback>(OnPicsChanges);
-            manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnProductInfo);
+            //manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnProductInfo);
             manager.Subscribe<SteamFriends.ProfileInfoCallback>(OnProfileInfo);
 
             steamClient.Connect();
@@ -123,24 +123,24 @@ namespace SteamUpdater
             );
         }
 
-        private static void OnProductInfo(SteamApps.PICSProductInfoCallback callback)
-        {
-            foreach (var item in callback.Apps)
-            {
-                Consumers.AbstractConsumer.Produce(
-                    Consumers.AbstractConsumer.queueAppsData,
-                    JsonConvert.SerializeObject(item.Value)
-                );
-            }
-
-            foreach (var item in callback.Packages)
-            {
-                Consumers.AbstractConsumer.Produce(
-                    Consumers.AbstractConsumer.queuePackagesData,
-                    JsonConvert.SerializeObject(item.Value)
-                );
-            }
-        }
+//        private static void OnProductInfo(SteamApps.PICSProductInfoCallback callback)
+//        {
+//            foreach (var item in callback.Apps)
+//            {
+//                Consumers.AbstractConsumer.Produce(
+//                    Consumers.AbstractConsumer.queueAppsData,
+//                    JsonConvert.SerializeObject(item.Value)
+//                );
+//            }
+//
+//            foreach (var item in callback.Packages)
+//            {
+//                Consumers.AbstractConsumer.Produce(
+//                    Consumers.AbstractConsumer.queuePackagesData,
+//                    JsonConvert.SerializeObject(item.Value)
+//                );
+//            }
+//        }
 
         private static void OnProfileInfo(SteamFriends.ProfileInfoCallback callback)
         {
@@ -180,7 +180,7 @@ namespace SteamUpdater
             if (callback.Result != EResult.OK)
             {
                 Log.GoogleInfo(
-                    String.Format("Unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult)
+                    string.Format("Unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult)
                 );
                 return;
             }

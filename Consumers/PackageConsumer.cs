@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
+using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
 
 namespace SteamUpdater.Consumers
@@ -13,10 +15,27 @@ namespace SteamUpdater.Consumers
 
             if (ids.Length > 0)
             {
-                uint[] empty = { };
-                var idInts = Array.ConvertAll(ids, Convert.ToUInt32);
-                Steam.steamApps.PICSGetProductInfo(empty, idInts, false);
+                // Un-bulk and re-produce
+                foreach (var entry in ids)
+                {
+                    Produce(queuePackages, entry);
+                }
             }
+            else if (ids.Length == 1)
+            {
+                var job = Steam.steamApps.PICSGetProductInfo(null, Convert.ToUInt32(ids[0]), false, false);
+
+                var callback = await job;
+
+                foreach (var item in callback.Results)
+                {
+                    Produce(queuePackagesData, JsonConvert.SerializeObject(item.Packages.First()));
+                }
+
+                Console.WriteLine(JsonConvert.SerializeObject(callback));
+            }
+
+            return true;
         }
     }
 }

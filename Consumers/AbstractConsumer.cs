@@ -3,6 +3,7 @@ using RabbitMQ.Client;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using RabbitMQ.Client.Events;
 
 namespace SteamUpdater.Consumers
@@ -18,7 +19,7 @@ namespace SteamUpdater.Consumers
         public const string queueProfilesData = "Profiles_Data";
         public const string queueChangesData = "Changes_Data";
 
-        private const string append = "Steam_Updater_";
+        private const string queueAppend = "Steam_";
 
         private static readonly ConnectionFactory connectionFactory = new ConnectionFactory
         {
@@ -28,7 +29,7 @@ namespace SteamUpdater.Consumers
         };
 
         // Abstracts
-        protected abstract void HandleMessage(BasicDeliverEventArgs msg);
+        protected abstract Task<bool> HandleMessage(BasicDeliverEventArgs msg);
 
         // Statics
         public static void startConsumers()
@@ -47,7 +48,7 @@ namespace SteamUpdater.Consumers
                     Thread.CurrentThread.IsBackground = true;
 
                     var consumer = entry.Value;
-                    consumer.Consume(append + entry.Key);
+                    consumer.Consume(queueAppend + entry.Key);
                 });
 
                 thread.Start();
@@ -68,10 +69,10 @@ namespace SteamUpdater.Consumers
             var connection = x.Item1;
             var channel = x.Item2;
 
-            channel.QueueDeclare(append + queue, true, false, false, null);
+            channel.QueueDeclare(queueAppend + queue, true, false, false);
 
             var bytes = Encoding.UTF8.GetBytes(data);
-            channel.BasicPublish("", append + queue, null, bytes);
+            channel.BasicPublish("", queueAppend + queue, null, bytes);
 
             channel.Close();
             connection.Close();
@@ -91,10 +92,21 @@ namespace SteamUpdater.Consumers
                 Consume(queue);
             };
 
-            channel.QueueDeclare(queue, true, false, false, null);
+            channel.QueueDeclare(queue, true, false, false);
 
             var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += delegate(object model, BasicDeliverEventArgs ea) { HandleMessage(ea); };
+            consumer.Received += delegate(object chan, BasicDeliverEventArgs ea)
+            {
+                var success = HandleMessage(ea);
+                if (success.Result)
+                {
+                    channel.BasicAck(ea.DeliveryTag, false);
+                }
+                else
+                {
+                    channel.BasicNack(ea.DeliveryTag, false, true);
+                }
+            };
 
             channel.BasicConsume(queue, true, consumer);
         }
