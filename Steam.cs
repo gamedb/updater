@@ -61,13 +61,16 @@ namespace SteamUpdater
 
         private static void RunWaitCallbacks(object obj, EventArgs args)
         {
-            timer1.Start();
-            manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
             timer1.Stop();
+            Console.WriteLine("1");
+            manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
+            timer1.Start();
         }
 
         private static void CheckForChanges(object obj, EventArgs args)
         {
+            timer2.Stop();
+            
             // Get last change ID
             if (!steamClient.IsConnected || !isLoggedOn)
             {
@@ -80,7 +83,7 @@ namespace SteamUpdater
             }
 
             // Check for new changes, if more than 5000, returns 0
-            timer2.Stop();
+            Console.WriteLine("2");
             steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
             timer2.Start();
         }
