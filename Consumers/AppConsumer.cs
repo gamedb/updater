@@ -2,6 +2,9 @@
 using System.Text;
 using System.Threading.Tasks;
 using RabbitMQ.Client.Events;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using SteamUpdater.Consumers.Messages;
 
 namespace SteamUpdater.Consumers
 {
@@ -12,11 +15,31 @@ namespace SteamUpdater.Consumers
             var msgBody = Encoding.UTF8.GetString(msg.Body);
             var ids = msgBody.Split(",");
 
-            if (ids.Length > 0)
+            if (ids.Length == 0)
             {
-                uint[] empty = { };
-                var idInts = Array.ConvertAll(ids, Convert.ToUInt32);
-                Steam.steamApps.PICSGetProductInfo(idInts, empty, false);
+                return true;
+            }
+
+            var appIDs = Array.ConvertAll(ids, Convert.ToUInt32);
+            var JobID = Steam.steamApps.PICSGetProductInfo(appIDs, new List<uint>(), false);
+            var callback = await JobID;
+
+            if (!callback.Complete)
+            {
+                return false;
+            }
+
+            foreach (var result in callback.Results)
+            {
+                foreach (var item in result.Apps)
+                {
+                    var message = new AppDataMessage
+                    {
+                        PICSAppInfo = item.Value
+                    };
+
+                    Produce(queueAppsData, JsonConvert.SerializeObject(message));
+                }
             }
 
             return true;

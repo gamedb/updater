@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
 using SteamKit2;
+using SteamUpdater.Consumers.Messages;
 
 namespace SteamUpdater.Consumers
 {
@@ -11,10 +13,22 @@ namespace SteamUpdater.Consumers
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
+            if (msgBody.Length == 0)
+            {
+                return true;
+            }
+
             var id = new SteamID();
             id.SetFromUInt64(ulong.Parse(msgBody));
 
-            Steam.steamFriends.RequestProfileInfo(id);
+            var JobID = Steam.steamFriends.RequestProfileInfo(id);
+
+            var message = new ProfileDataMessage
+            {
+                ProfileInfo = await JobID
+            };
+
+            Produce(queueProfilesData, JsonConvert.SerializeObject(message));
 
             return true;
         }

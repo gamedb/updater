@@ -4,6 +4,6 @@ namespace SteamUpdater.Consumers.Messages
 {
     public class PackageDataMessage
     {
-        public PICSProductInfoCallback.PICSProductInfo PICSProductInfo { get; set; }
+        public PICSProductInfoCallback.PICSProductInfo PICSPackageInfo { get; set; }
     }
 }

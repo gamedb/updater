@@ -18,6 +18,9 @@ namespace SteamUpdater
         private static SteamClient steamClient;
         private static CallbackManager manager;
 
+        private static System.Timers.Timer timer1;
+        private static System.Timers.Timer timer2;
+
         public static SteamUser steamUser;
         public static SteamApps steamApps;
         public static SteamFriends steamFriends;
@@ -42,17 +45,15 @@ namespace SteamUpdater
             manager.Subscribe<SteamUser.LoggedOnCallback>(OnLoggedOn);
             manager.Subscribe<SteamUser.LoggedOffCallback>(OnLoggedOff);
             manager.Subscribe<SteamApps.PICSChangesCallback>(OnPicsChanges);
-            //manager.Subscribe<SteamApps.PICSProductInfoCallback>(OnProductInfo);
-            manager.Subscribe<SteamFriends.ProfileInfoCallback>(OnProfileInfo);
 
             steamClient.Connect();
 
-            var timer1 = new System.Timers.Timer();
+            timer1 = new System.Timers.Timer();
             timer1.Elapsed += RunWaitCallbacks;
             timer1.Interval = TimeSpan.FromSeconds(1).TotalMilliseconds;
             timer1.Start();
 
-            var timer2 = new System.Timers.Timer();
+            timer2 = new System.Timers.Timer();
             timer2.Elapsed += CheckForChanges;
             timer2.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
             timer2.Start();
@@ -60,10 +61,11 @@ namespace SteamUpdater
 
         private static void RunWaitCallbacks(object obj, EventArgs args)
         {
+            timer1.Start();
             manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
+            timer1.Stop();
         }
 
-        // If more than 5000, returns 0
         private static void CheckForChanges(object obj, EventArgs args)
         {
             // Get last change ID
@@ -76,14 +78,11 @@ namespace SteamUpdater
             {
                 previousChangeNumber = uint.Parse(File.ReadAllText(LastChangeFile));
             }
-            else if (previousChangeNumber == 0)
-            {
-                previousChangeNumber = 4574000;
-            }
 
-            // Check for new changes
-            steamApps.PICSGetChangesSince(previousChangeNumber, true, false);
-            steamApps.PICSGetChangesSince(previousChangeNumber, false, true);
+            // Check for new changes, if more than 5000, returns 0
+            timer2.Stop();
+            steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
+            timer2.Start();
         }
 
         private static void OnPicsChanges(SteamApps.PICSChangesCallback callback)
@@ -119,33 +118,6 @@ namespace SteamUpdater
 
             Consumers.AbstractConsumer.Produce(
                 Consumers.AbstractConsumer.queueChangesData,
-                JsonConvert.SerializeObject(callback)
-            );
-        }
-
-//        private static void OnProductInfo(SteamApps.PICSProductInfoCallback callback)
-//        {
-//            foreach (var item in callback.Apps)
-//            {
-//                Consumers.AbstractConsumer.Produce(
-//                    Consumers.AbstractConsumer.queueAppsData,
-//                    JsonConvert.SerializeObject(item.Value)
-//                );
-//            }
-//
-//            foreach (var item in callback.Packages)
-//            {
-//                Consumers.AbstractConsumer.Produce(
-//                    Consumers.AbstractConsumer.queuePackagesData,
-//                    JsonConvert.SerializeObject(item.Value)
-//                );
-//            }
-//        }
-
-        private static void OnProfileInfo(SteamFriends.ProfileInfoCallback callback)
-        {
-            Consumers.AbstractConsumer.Produce(
-                Consumers.AbstractConsumer.queueProfilesData,
                 JsonConvert.SerializeObject(callback)
             );
         }
