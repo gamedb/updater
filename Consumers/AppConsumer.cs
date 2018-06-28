@@ -44,5 +44,15 @@ namespace SteamUpdater.Consumers
 
             return true;
         }
+
+        protected void GetGlobalAchievementPercentagesForApp()
+        {
+            
+        }
+
+        protected void GetSchemaForGame()
+        {
+            
+        }
     }
 }
