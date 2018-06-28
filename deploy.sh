@@ -19,6 +19,6 @@ curl https://api.rollbar.com/api/1/deploy/ \
   --silent > /dev/null
 
 echo "### Restarting"
-/etc/init.d/steam-updater restart
+/etc/init.d/steam-updater restart # Needs pkill SteamUpdater
 
 # Run /steam-updater/bin/Release/netcoreapp2.0/osx-x64/publish/SteamUpdater
