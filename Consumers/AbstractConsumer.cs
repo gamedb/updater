@@ -12,15 +12,27 @@ namespace SteamUpdater.Consumers
     {
         // Consts
         public const string queueApps = "Apps";
-        public const string queueAppsData = "Apps_Data";
+        protected const string queueAppsData = "Apps_Data";
+
         public const string queuePackages = "Packages";
-        public const string queuePackagesData = "Packages_Data";
+        protected const string queuePackagesData = "Packages_Data";
+
         public const string queueProfiles = "Profiles";
-        public const string queueProfilesData = "Profiles_Data";
+        protected const string queueProfilesData = "Profiles_Data";
+
         public const string queueChangesData = "Changes_Data";
 
         private const string queueAppend = "Steam_";
 
+        // Queue -> Consumer
+        public static readonly Dictionary<string, AbstractConsumer> consumers = new Dictionary<string, AbstractConsumer>
+        {
+            {queueApps, new AppConsumer()},
+            {queuePackages, new PackageConsumer()},
+            {queueProfiles, new ProfileConsumer()}
+        };
+
+        //
         private static readonly ConnectionFactory connectionFactory = new ConnectionFactory
         {
             HostName = Environment.GetEnvironmentVariable("STEAM_RABBIT_HOST"),
@@ -28,19 +40,12 @@ namespace SteamUpdater.Consumers
             Password = Environment.GetEnvironmentVariable("STEAM_RABBIT_PASS")
         };
 
-        // Abstracts
-        protected abstract Task<bool> HandleMessage(BasicDeliverEventArgs msg);
+        // Abstract
+        protected abstract Task<Tuple<bool, bool>> HandleMessage(BasicDeliverEventArgs msg);
 
         // Statics
         public static void startConsumers()
         {
-            var consumers = new Dictionary<string, AbstractConsumer>
-            {
-                {queueApps, new AppConsumer()},
-                {queuePackages, new PackageConsumer()},
-                {queueProfiles, new ProfileConsumer()}
-            };
-
             foreach (var entry in consumers)
             {
                 var thread = new Thread(() =>
@@ -55,24 +60,24 @@ namespace SteamUpdater.Consumers
             }
         }
 
-        private static (IConnection, IModel) getConnection()
-        {
-            var connection = connectionFactory.CreateConnection();
-            var channel = connection.CreateModel();
-
-            return (connection, channel);
-        }
-
         public static void Produce(string queue, string data)
         {
+            if (data.Length == 0)
+            {
+                return;
+            }
+
             var x = getConnection();
             var connection = x.Item1;
             var channel = x.Item2;
 
             channel.QueueDeclare(queueAppend + queue, true, false, false);
 
+            var properties = channel.CreateBasicProperties();
+            properties.Persistent = true;
+
             var bytes = Encoding.UTF8.GetBytes(data);
-            channel.BasicPublish("", queueAppend + queue, null, bytes);
+            channel.BasicPublish("", queueAppend + queue, properties, bytes);
 
             channel.Close();
             connection.Close();
@@ -97,18 +102,40 @@ namespace SteamUpdater.Consumers
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += delegate(object chan, BasicDeliverEventArgs ea)
             {
-                var success = HandleMessage(ea);
-                if (success.Result)
+                // Check logged in to Steam
+                if (!Steam.steamClient.IsConnected || !Steam.isLoggedOn)
+                {
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    Log.GoogleInfo("Waiting to login before consuming");
+                    channel.BasicNack(ea.DeliveryTag, false, true);
+                    return;
+                }
+
+                // Consume message
+                var response = HandleMessage(ea);
+                var ack = response.Result.Item1;
+                var requeue = response.Result.Item2;
+
+                if (ack)
                 {
                     channel.BasicAck(ea.DeliveryTag, false);
                 }
                 else
                 {
-                    channel.BasicNack(ea.DeliveryTag, false, true);
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                    channel.BasicNack(ea.DeliveryTag, false, requeue);
                 }
             };
 
             channel.BasicConsume(queue, false, consumer);
+        }
+
+        private static (IConnection, IModel) getConnection()
+        {
+            var connection = connectionFactory.CreateConnection();
+            var channel = connection.CreateModel();
+
+            return (connection, channel);
         }
     }
 }

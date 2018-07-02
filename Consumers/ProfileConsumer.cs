@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
@@ -9,13 +10,13 @@ namespace SteamUpdater.Consumers
 {
     public class ProfileConsumer : AbstractConsumer
     {
-        protected override async Task<bool> HandleMessage(BasicDeliverEventArgs msg)
+        protected override async Task<Tuple<bool, bool>> HandleMessage(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
             if (msgBody.Length == 0)
             {
-                return true;
+                return new Tuple<bool, bool>(false, false);
             }
 
             var id = new SteamID();
@@ -30,7 +31,7 @@ namespace SteamUpdater.Consumers
 
             Produce(queueProfilesData, JsonConvert.SerializeObject(message));
 
-            return true;
+            return new Tuple<bool, bool>(true, false);
         }
     }
 }

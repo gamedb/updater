@@ -14,9 +14,9 @@ namespace SteamUpdater
 
         public static bool quitOnDisconnect;
         private static uint previousChangeNumber;
-        private static bool isLoggedOn;
+        public static bool isLoggedOn;
 
-        private static SteamClient steamClient;
+        public static SteamClient steamClient;
         private static CallbackManager manager;
 
         private static System.Timers.Timer timer1;
@@ -68,8 +68,6 @@ namespace SteamUpdater
 
         private static async void CheckForChanges(object obj, EventArgs args)
         {
-            Console.Write(".");
-
             timer2.Stop();
 
             // Check logged in
@@ -151,7 +149,7 @@ namespace SteamUpdater
             }
 
             // Try to reconnect
-            Thread.Sleep(TimeSpan.FromSeconds(15));
+            Thread.Sleep(TimeSpan.FromSeconds(10));
             steamClient.Connect();
         }
 
