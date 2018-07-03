@@ -36,8 +36,6 @@ namespace SteamUpdater.Consumers
 
             //Console.WriteLine("-> " + appIDs.Length);
 
-            //Steam.steamUserStats.GetNumberOfCurrentPlayers();
-
             var JobID = Steam.steamApps.PICSGetProductInfo(appIDs, packageIDs, false, false);
             var callback = await JobID;
 
