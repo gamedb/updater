@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
 
 namespace SteamUpdater.Consumers
@@ -136,6 +137,14 @@ namespace SteamUpdater.Consumers
             var channel = connection.CreateModel();
 
             return (connection, channel);
+        }
+
+        protected async void GetAccessTokens(IEnumerable<uint> apps, IEnumerable<uint> packages)
+        {
+            var JobID = Steam.steamApps.PICSGetAccessTokens(apps, packages);
+            var callback = await JobID;
+
+            Console.WriteLine(JsonConvert.SerializeObject(callback));
         }
     }
 }

@@ -32,10 +32,13 @@ namespace SteamUpdater.Consumers
             }
 
             var appIDs = Array.ConvertAll(IDs, Convert.ToUInt32);
+            var packageIDs = new List<uint>();
 
-            Console.WriteLine("-> " + appIDs.Length);
+            //Console.WriteLine("-> " + appIDs.Length);
 
-            var JobID = Steam.steamApps.PICSGetProductInfo(appIDs, new List<uint>(), false);
+            //Steam.steamUserStats.GetNumberOfCurrentPlayers();
+
+            var JobID = Steam.steamApps.PICSGetProductInfo(appIDs, packageIDs, false, false);
             var callback = await JobID;
 
             if (!callback.Complete)
@@ -71,17 +74,9 @@ namespace SteamUpdater.Consumers
                 }
             }
 
-            Console.WriteLine("<- " + count);
+            //Console.WriteLine("<- " + count);
 
             return new Tuple<bool, bool>(true, false);
-        }
-
-        protected void GetGlobalAchievementPercentagesForApp()
-        {
-        }
-
-        protected void GetSchemaForGame()
-        {
         }
     }
 }
