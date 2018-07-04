@@ -23,7 +23,6 @@ namespace SteamUpdater
         private static System.Timers.Timer timer2;
 
         public static SteamUser steamUser;
-        public static SteamUserStats steamUserStats;
         public static SteamApps steamApps;
         public static SteamFriends steamFriends;
 
@@ -40,7 +39,6 @@ namespace SteamUpdater
             steamUser = steamClient.GetHandler<SteamUser>();
             steamApps = steamClient.GetHandler<SteamApps>();
             steamFriends = steamClient.GetHandler<SteamFriends>();
-            steamUserStats = steamClient.GetHandler<SteamUserStats>();
 
             // Callbacks
             manager.Subscribe<SteamClient.ConnectedCallback>(OnConnected);
