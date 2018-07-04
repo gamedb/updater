@@ -68,20 +68,34 @@ namespace SteamUpdater.Consumers
                 return;
             }
 
-            var x = getConnection();
-            var connection = x.Item1;
-            var channel = x.Item2;
+            try
+            {
+                // Get connection
+                var x = getConnection();
+                var connection = x.Item1;
+                var channel = x.Item2;
 
-            channel.QueueDeclare(queueAppend + queue, true, false, false);
+                //
+                channel.QueueDeclare(queueAppend + queue, true, false, false);
 
-            var properties = channel.CreateBasicProperties();
-            properties.Persistent = true;
+                var properties = channel.CreateBasicProperties();
+                properties.Persistent = true;
 
-            var bytes = Encoding.UTF8.GetBytes(data);
-            channel.BasicPublish("", queueAppend + queue, properties, bytes);
+                var bytes = Encoding.UTF8.GetBytes(data);
+                channel.BasicPublish("", queueAppend + queue, properties, bytes);
 
-            channel.Close();
-            connection.Close();
+                // Close connection
+                if (!channel.IsClosed)
+                {
+                    channel.Close();
+                }
+
+                connection.Close();
+            }
+            catch (Exception ex)
+            {
+                Log.RollbarError("Failed producing to " + queue + " with data: " + data + " - " + ex);
+            }
         }
 
         private void Consume(string queue)
