@@ -69,63 +69,71 @@ namespace SteamUpdater
         private static async void CheckForChanges(object obj, EventArgs args)
         {
             timer2.Stop();
-
-            // Check logged in
-            if (steamClient.IsConnected && isLoggedOn)
+            try
             {
-                // Get the last change ID
-                if (previousChangeNumber == 0 && File.Exists(LastChangeFile))
+                // Check logged in
+                if (steamClient.IsConnected && isLoggedOn)
                 {
-                    previousChangeNumber = uint.Parse(File.ReadAllText(LastChangeFile));
-                }
-
-                // Get latest changes, if more than 5000, returns 0
-                var JobID = steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
-                var callback = await JobID;
-
-                if (previousChangeNumber < callback.CurrentChangeNumber)
-                {
-                    Log.GoogleInfo(
-                        String.Format(
-                            "Change {0:N0} - {1:N0} ({2:N0} changes) {3} apps, {4} packages",
-                            callback.LastChangeNumber,
-                            callback.CurrentChangeNumber,
-                            callback.CurrentChangeNumber - callback.LastChangeNumber,
-                            callback.AppChanges.Count,
-                            callback.PackageChanges.Count
-                        )
-                    );
-
-                    // Save apps
-                    Consumers.AbstractConsumer.Produce(
-                        Consumers.AbstractConsumer.queueApps,
-                        string.Join(",", callback.AppChanges.Keys.ToList())
-                    );
-
-                    // Save packages
-                    Consumers.AbstractConsumer.Produce(
-                        Consumers.AbstractConsumer.queuePackages,
-                        string.Join(",", callback.PackageChanges.Keys.ToList())
-                    );
-
-                    // Save changes
-                    var message = new ChangeDataMessage
+                    // Get the last change ID
+                    if (previousChangeNumber == 0 && File.Exists(LastChangeFile))
                     {
-                        PICSChanges = callback
-                    };
+                        previousChangeNumber = uint.Parse(File.ReadAllText(LastChangeFile));
+                    }
 
-                    Consumers.AbstractConsumer.Produce(
-                        Consumers.AbstractConsumer.queueChangesData,
-                        JsonConvert.SerializeObject(message)
-                    );
+                    // Get latest changes. If more than 5000, returns 0
+                    var JobID = steamApps.PICSGetChangesSince(previousChangeNumber, true, true);
+                    var callback = await JobID;
 
-                    // Update change number
-                    previousChangeNumber = callback.CurrentChangeNumber;
-                    File.WriteAllText(LastChangeFile, previousChangeNumber.ToString());
+                    if (previousChangeNumber < callback.CurrentChangeNumber)
+                    {
+                        Log.GoogleInfo(
+                            String.Format(
+                                "Change {0:N0} - {1:N0} ({2:N0} changes) {3} apps, {4} packages",
+                                callback.LastChangeNumber,
+                                callback.CurrentChangeNumber,
+                                callback.CurrentChangeNumber - callback.LastChangeNumber,
+                                callback.AppChanges.Count,
+                                callback.PackageChanges.Count
+                            )
+                        );
+
+                        // Save apps
+                        Consumers.AbstractConsumer.Produce(
+                            Consumers.AbstractConsumer.queueApps,
+                            string.Join(",", callback.AppChanges.Keys.ToList())
+                        );
+
+                        // Save packages
+                        Consumers.AbstractConsumer.Produce(
+                            Consumers.AbstractConsumer.queuePackages,
+                            string.Join(",", callback.PackageChanges.Keys.ToList())
+                        );
+
+                        // Save changes
+                        var message = new ChangeDataMessage
+                        {
+                            PICSChanges = callback
+                        };
+
+                        Consumers.AbstractConsumer.Produce(
+                            Consumers.AbstractConsumer.queueChangesData,
+                            JsonConvert.SerializeObject(message)
+                        );
+
+                        // Update change number
+                        previousChangeNumber = callback.CurrentChangeNumber;
+                        File.WriteAllText(LastChangeFile, previousChangeNumber.ToString());
+                    }
                 }
             }
-
-            timer2.Start();
+            catch (Exception ex)
+            {
+                Log.RollbarError("Failed checking for changes - " + ex.Message);
+            }
+            finally
+            {
+                timer2.Start();
+            }
         }
 
         private static void OnConnected(SteamClient.ConnectedCallback callback)

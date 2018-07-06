@@ -94,7 +94,7 @@ namespace SteamUpdater.Consumers
             }
             catch (Exception ex)
             {
-                Log.RollbarError("Failed producing to " + queue + " with data: " + data + " - " + ex);
+                Log.RollbarError("Failed producing to " + queue + " with data: " + data + " - " + ex.Message);
             }
         }
 

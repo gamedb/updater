@@ -8,7 +8,7 @@ git reset --hard origin/master
 
 echo "### Building"
 #dotnet publish --runtime osx-x64 --self-contained --configuration release
-dotnet publish --runtime debian-x64 --self-contained --configuration release # debian.8-x64
+dotnet publish --runtime debian-x64 --self-contained --configuration release
 
 echo "### Talking to Rollbar"
 curl https://api.rollbar.com/api/1/deploy/ \
