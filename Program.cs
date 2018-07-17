@@ -9,9 +9,6 @@ namespace SteamUpdater
         {
             Console.Title = "Steam Updater";
 
-            // Config
-            Config.setEnvVars();
-
             // Rollbar
             Log.setupRollbar();
 
