@@ -145,7 +145,7 @@ namespace SteamUpdater.Consumers
             channel.BasicConsume(queue, false, consumer);
         }
 
-        private static (IConnection, IModel) getConnection()
+        public static (IConnection, IModel) getConnection()
         {
             var connection = connectionFactory.CreateConnection();
             var channel = connection.CreateModel();

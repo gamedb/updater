@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using SteamUpdater.Consumers;
 
 namespace SteamUpdater
 {
@@ -11,6 +12,28 @@ namespace SteamUpdater
 
             // Rollbar
             Log.setupRollbar();
+
+            // Wait for Rabbit
+            while (true)
+            {
+                try
+                {
+                    var conn = AbstractConsumer.getConnection();
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Waiting for Rabbit.. " + ex.Message);
+                }
+                finally
+                {
+                    conn.Close();
+                    conn.Dispose();
+                }
+
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+                break;
+            }
 
             // Poll for new changes
             Steam.startSteam(false);
