@@ -77,7 +77,8 @@ namespace SteamUpdater
                     // Get the last change ID
                     if (previousChangeNumber == 0 && File.Exists(LastChangeFile))
                     {
-                        previousChangeNumber = uint.Parse(File.ReadAllText(LastChangeFile));
+                        var contents = File.ReadAllText(LastChangeFile);
+                        previousChangeNumber = contents == "" ? 0 : uint.Parse(contents);
                     }
 
                     // Get latest changes. If more than 5000, returns 0
