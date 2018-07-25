@@ -18,28 +18,25 @@ namespace SteamUpdater
             {
                 try
                 {
-                    var conn = AbstractConsumer.getConnection();
+                    var x = AbstractConsumer.getConnection();
+                    var connection = x.Item1;
+                    connection.Close();
+                    connection.Dispose();
                     break;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine("Waiting for Rabbit.. " + ex.Message);
                 }
-                finally
-                {
-                    conn.Close();
-                    conn.Dispose();
-                }
 
                 Thread.Sleep(TimeSpan.FromSeconds(1));
-                break;
             }
 
             // Poll for new changes
             Steam.startSteam(false);
 
             // Consumers
-            Consumers.AbstractConsumer.startConsumers();
+            AbstractConsumer.startConsumers();
 
             // On quit
             Console.CancelKeyPress += delegate
