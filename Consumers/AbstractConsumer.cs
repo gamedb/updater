@@ -11,18 +11,16 @@ namespace SteamUpdater.Consumers
 {
     public abstract class AbstractConsumer
     {
-        // Consts
+        private static IConnection connection;
+        private static IModel channel;
+
         public const string queueApps = "Apps";
         protected const string queueAppsData = "Apps_Data";
-
         public const string queuePackages = "Packages";
         protected const string queuePackagesData = "Packages_Data";
-
         public const string queueProfiles = "Profiles";
         protected const string queueProfilesData = "Profiles_Data";
-
         public const string queueChangesData = "Changes_Data";
-
         private const string queueAppend = "Steam_";
 
         // Queue -> Consumer
@@ -70,12 +68,8 @@ namespace SteamUpdater.Consumers
 
             try
             {
-                // Get connection
-                var x = getConnection();
-                var connection = x.Item1;
-                var channel = x.Item2;
+                connect();
 
-                //
                 channel.QueueDeclare(queueAppend + queue, true, false, false);
 
                 var properties = channel.CreateBasicProperties();
@@ -83,14 +77,6 @@ namespace SteamUpdater.Consumers
 
                 var bytes = Encoding.UTF8.GetBytes(data);
                 channel.BasicPublish("", queueAppend + queue, properties, bytes);
-
-                // Close connection
-                if (!channel.IsClosed)
-                {
-                    channel.Close();
-                }
-
-                connection.Close();
             }
             catch (Exception ex)
             {
@@ -102,9 +88,7 @@ namespace SteamUpdater.Consumers
         {
             Log.GoogleInfo("Consuming " + queue);
 
-            var x = getConnection();
-            var connection = x.Item1;
-            var channel = x.Item2;
+            connect();
 
             connection.ConnectionShutdown += (s, e) =>
             {
@@ -145,12 +129,13 @@ namespace SteamUpdater.Consumers
             channel.BasicConsume(queue, false, consumer);
         }
 
-        public static (IConnection, IModel) getConnection()
+        public static void connect()
         {
-            var connection = connectionFactory.CreateConnection();
-            var channel = connection.CreateModel();
-
-            return (connection, channel);
+            if (!connection.IsOpen || !channel.IsOpen)
+            {
+                connection = connectionFactory.CreateConnection();
+                channel = connection.CreateModel();
+            }
         }
 
         protected async void GetAccessTokens(IEnumerable<uint> apps, IEnumerable<uint> packages)

@@ -18,10 +18,7 @@ namespace SteamUpdater
             {
                 try
                 {
-                    var x = AbstractConsumer.getConnection();
-                    var connection = x.Item1;
-                    connection.Close();
-                    connection.Dispose();
+                    AbstractConsumer.connect();
                     break;
                 }
                 catch (Exception ex)
@@ -29,7 +26,7 @@ namespace SteamUpdater
                     Console.WriteLine("Waiting for Rabbit.. " + ex.Message);
                 }
 
-                Thread.Sleep(TimeSpan.FromSeconds(1));
+                Thread.Sleep(TimeSpan.FromSeconds(2));
             }
 
             // Poll for new changes
