@@ -1,5 +1,5 @@
 # Build image
-FROM microsoft/dotnet:2.1-sdk AS build-env
+FROM microsoft/dotnet:2.1-sdk-alpine AS build-env
 WORKDIR /root
 COPY . ./
 RUN dotnet restore
