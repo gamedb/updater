@@ -131,7 +131,7 @@ namespace SteamUpdater.Consumers
 
         public static void connect()
         {
-            if (!connection.IsOpen || !channel.IsOpen)
+            if (connection == null || !connection.IsOpen || channel == null || !channel.IsOpen)
             {
                 connection = connectionFactory.CreateConnection();
                 channel = connection.CreateModel();
