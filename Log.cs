@@ -9,7 +9,8 @@ namespace SteamUpdater
     public static class Log
     {
         private const string key = "STEAM_PROXY_ROLLBAR_PRIVATE";
-        private const string env = "ENV";
+        private const string proj = "STEAM_GOOGLE_PROJECT";
+        private const string env = "STEAM_ENV";
 
         private static readonly LoggingServiceV2Client googleCLient = LoggingServiceV2Client.Create();
 
@@ -17,9 +18,8 @@ namespace SteamUpdater
         {
             Console.WriteLine(message);
 
-            var googleProject = Environment.GetEnvironmentVariable("STEAM_GOOGLE_PROJECT");
-
-            var logName = new LogName(googleProject, "steam-updater-" + env);
+            var googleProject = Environment.GetEnvironmentVariable(proj);
+            var logName = new LogName(googleProject, "steam-updater-" + Environment.GetEnvironmentVariable(env));
             var logEntry = new LogEntry
             {
                 LogName = logName.ToString(),
