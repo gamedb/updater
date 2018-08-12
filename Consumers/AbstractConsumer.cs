@@ -34,9 +34,10 @@ namespace SteamUpdater.Consumers
         //
         private static readonly ConnectionFactory connectionFactory = new ConnectionFactory
         {
-            HostName = Environment.GetEnvironmentVariable("STEAM_RABBIT_HOST"),
             UserName = Environment.GetEnvironmentVariable("STEAM_RABBIT_USER"),
-            Password = Environment.GetEnvironmentVariable("STEAM_RABBIT_PASS")
+            Password = Environment.GetEnvironmentVariable("STEAM_RABBIT_PASS"),
+            HostName = Environment.GetEnvironmentVariable("STEAM_RABBIT_HOST"),
+            Port = int.Parse(Environment.GetEnvironmentVariable("STEAM_RABBIT_PORT"))
         };
 
         // Abstract
