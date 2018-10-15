@@ -20,13 +20,13 @@ namespace SteamUpdater
 
             var googleProject = Environment.GetEnvironmentVariable(proj);
             var logName = new LogName(googleProject, "steam-updater-" + Environment.GetEnvironmentVariable(env));
+            var resource = new MonitoredResource {Type = "project"};
             var logEntry = new LogEntry
             {
                 LogName = logName.ToString(),
                 Severity = LogSeverity.Info,
                 TextPayload = message
             };
-            var resource = new MonitoredResource {Type = "global"};
 
             googleCLient.WriteLogEntries(LogNameOneof.From(logName), resource, null, new[] {logEntry});
         }
