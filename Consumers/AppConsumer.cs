@@ -14,29 +14,15 @@ namespace SteamUpdater.Consumers
         protected override async Task<Tuple<bool, bool>> HandleMessage(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
-            var IDs = msgBody.Split(",");
+            var IDs = msgBody.Split(",").Distinct().ToArray();
 
             if (msgBody.Length == 0 || IDs.Length == 0)
             {
                 return new Tuple<bool, bool>(false, false);
             }
 
-            // Unique
-            IDs = IDs.Distinct().ToArray();
-
-            // Requeue anything over 100
-            if (IDs.Length > 100)
-            {
-//                Produce(queueApps, string.Join(",", IDs.Skip(100).ToArray()));
-//                IDs = IDs.Take(100).ToArray();
-            }
-
             var appIDs = Array.ConvertAll(IDs, Convert.ToUInt32);
-            var packageIDs = new List<uint>();
-
-            //Console.WriteLine("-> " + appIDs.Length);
-
-            var JobID = Steam.steamApps.PICSGetProductInfo(appIDs, packageIDs, false, false);
+            var JobID = Steam.steamApps.PICSGetProductInfo(appIDs, new List<uint>(), false, false);
             var callback = await JobID;
 
             if (!callback.Complete)
@@ -44,12 +30,8 @@ namespace SteamUpdater.Consumers
                 return new Tuple<bool, bool>(false, true);
             }
 
-            var count = 0;
-
             foreach (var result in callback.Results)
             {
-                count = count + result.Apps.Count + result.UnknownApps.Count;
-
                 foreach (var item in result.Apps)
                 {
                     var message = new AppDataMessage
@@ -71,8 +53,6 @@ namespace SteamUpdater.Consumers
                     Log.GoogleInfo("Unknown package: " + entry);
                 }
             }
-
-            //Console.WriteLine("<- " + count);
 
             return new Tuple<bool, bool>(true, false);
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -13,14 +14,12 @@ namespace SteamUpdater.Consumers
         protected override async Task<Tuple<bool, bool>> HandleMessage(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
-            var IDs = msgBody.Split(",");
+            var IDs = msgBody.Split(",").Distinct().ToArray();
 
             if (msgBody.Length == 0 || IDs.Length == 0)
             {
                 return new Tuple<bool, bool>(false, false);
             }
-
-            // todo, take 100, requeue rest
 
             var packageIDs = Array.ConvertAll(IDs, Convert.ToUInt32);
             var JobID = Steam.steamApps.PICSGetProductInfo(new List<uint>(), packageIDs, false);
