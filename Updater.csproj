@@ -2,6 +2,8 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>Updater</AssemblyName>
+    <RootNamespace>Updater</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Google.Cloud.Logging.V2" Version="2.1.0" />

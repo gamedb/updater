@@ -1,13 +1,13 @@
 ﻿using System;
-using RabbitMQ.Client;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace SteamUpdater.Consumers
+namespace Updater.Consumers
 {
     public abstract class AbstractConsumer
     {

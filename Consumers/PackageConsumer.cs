@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
-using SteamUpdater.Consumers.Messages;
+using Updater.Consumers.Messages;
 
-namespace SteamUpdater.Consumers
+namespace Updater.Consumers
 {
     public class PackageConsumer : AbstractConsumer
     {

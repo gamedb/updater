@@ -1,10 +1,10 @@
 ﻿using System;
-using Rollbar;
-using Google.Cloud.Logging.V2;
-using Google.Cloud.Logging.Type;
 using Google.Api;
+using Google.Cloud.Logging.Type;
+using Google.Cloud.Logging.V2;
+using Rollbar;
 
-namespace SteamUpdater
+namespace Updater
 {
     public static class Log
     {

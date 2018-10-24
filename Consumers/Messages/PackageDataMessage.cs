@@ -1,9 +1,9 @@
-﻿using static SteamKit2.SteamApps;
+﻿using SteamKit2;
 
-namespace SteamUpdater.Consumers.Messages
+namespace Updater.Consumers.Messages
 {
     public class PackageDataMessage : AbstractMessage
     {
-        public PICSProductInfoCallback.PICSProductInfo PICSPackageInfo { get; set; }
+        public SteamApps.PICSProductInfoCallback.PICSProductInfo PICSPackageInfo { get; set; }
     }
 }

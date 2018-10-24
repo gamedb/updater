@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using SteamKit2;
-using SteamUpdater.Consumers.Messages;
+using Updater.Consumers.Messages;
 
-namespace SteamUpdater
+namespace Updater
 {
     public static class Steam
     {

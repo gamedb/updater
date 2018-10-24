@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
-using SteamUpdater.Consumers;
+using Updater.Consumers;
 
-namespace SteamUpdater
+namespace Updater
 {
     internal static class ChangeFetcher
     {

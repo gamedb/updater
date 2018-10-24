@@ -1,6 +1,6 @@
 ﻿using SteamKit2;
 
-namespace SteamUpdater.Consumers.Messages
+namespace Updater.Consumers.Messages
 {
     public class ChangeDataMessage : AbstractMessage
     {

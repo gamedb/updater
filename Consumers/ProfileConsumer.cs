@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
 using SteamKit2;
-using SteamUpdater.Consumers.Messages;
+using Updater.Consumers.Messages;
 
-namespace SteamUpdater.Consumers
+namespace Updater.Consumers
 {
     public class ProfileConsumer : AbstractConsumer
     {
