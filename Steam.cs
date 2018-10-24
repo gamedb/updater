@@ -50,12 +50,12 @@ namespace SteamUpdater
 
             timer1 = new System.Timers.Timer();
             timer1.Elapsed += RunWaitCallbacks;
-            timer1.Interval = TimeSpan.FromSeconds(1).TotalMilliseconds;
+            timer1.Interval = TimeSpan.FromSeconds(10).TotalMilliseconds;
             timer1.Start();
 
             timer2 = new System.Timers.Timer();
             timer2.Elapsed += CheckForChanges;
-            timer2.Interval = TimeSpan.FromSeconds(5).TotalMilliseconds;
+            timer2.Interval = TimeSpan.FromSeconds(60).TotalMilliseconds;
             timer2.Start();
         }
 
