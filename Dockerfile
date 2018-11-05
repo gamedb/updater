@@ -10,4 +10,4 @@ FROM microsoft/dotnet:2.1-runtime
 WORKDIR /root
 COPY --from=build-env /root/out .
 RUN touch google-auth.json && touch last-changenumber.txt
-ENTRYPOINT ["dotnet", "SteamUpdater.dll"]
+ENTRYPOINT ["dotnet", "Updater.dll"]
