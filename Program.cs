@@ -29,7 +29,7 @@ namespace Updater
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Waiting for Rabbit.. " + ex.Message);
+                    Console.WriteLine("Waiting for Rabbit.. " + ex.Message + " - " + ex.InnerException.Message);
                 }
 
                 Thread.Sleep(TimeSpan.FromSeconds(2));
