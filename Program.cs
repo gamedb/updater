@@ -46,7 +46,6 @@ namespace Updater
             {
                 Steam.quitOnDisconnect = true;
                 Steam.steamUser.LogOff();
-                Thread.Sleep(Timeout.Infinite);
             };
 
             // Block thread
