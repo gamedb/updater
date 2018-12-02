@@ -19,7 +19,9 @@ namespace Updater
             Console.WriteLine(message);
 
             var googleProject = Environment.GetEnvironmentVariable(proj);
-            var logName = new LogName(googleProject, "steam-updater-" + Environment.GetEnvironmentVariable(env));
+            var environment = Environment.GetEnvironmentVariable(env);
+
+            var logName = new LogName(googleProject, environment + "-steam-updater");
             var resource = new MonitoredResource {Type = "project"};
             var logEntry = new LogEntry
             {
