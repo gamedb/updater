@@ -38,10 +38,12 @@ namespace Updater
             var rollbarKey = Environment.GetEnvironmentVariable(key);
             var environment = Environment.GetEnvironmentVariable(env);
 
-            if (!string.IsNullOrEmpty(rollbarKey))
+            if (string.IsNullOrEmpty(rollbarKey))
             {
                 Console.WriteLine("Rollbar key environment variable not found");
-
+            }
+            else
+            {
                 var config = new RollbarConfig(rollbarKey)
                 {
                     Environment = environment
