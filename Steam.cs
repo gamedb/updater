@@ -89,12 +89,13 @@ namespace Updater
                     {
                         Log.GoogleInfo(
                             String.Format(
-                                "Change {0:N0} - {1:N0} ({2:N0} changes) {3} apps, {4} packages",
+                                "{5:hh:mm:ss} Change {0:N0} - {1:N0} ({2:N0} changes) {3} apps, {4} packages",
                                 callback.LastChangeNumber,
                                 callback.CurrentChangeNumber,
                                 callback.CurrentChangeNumber - callback.LastChangeNumber,
                                 callback.AppChanges.Count,
-                                callback.PackageChanges.Count
+                                callback.PackageChanges.Count,
+                                DateTime.Now
                             )
                         );
 
