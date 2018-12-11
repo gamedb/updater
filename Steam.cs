@@ -168,7 +168,12 @@ namespace Updater
             if (callback.Result != EResult.OK)
             {
                 Log.GoogleInfo(
-                    string.Format("Unable to logon to Steam: {0} / {1}", callback.Result, callback.ExtendedResult)
+                    String.Format(
+                        "{2:hh:mm:ss} Unable to logon to Steam: {0} / {1}",
+                        callback.Result,
+                        callback.ExtendedResult,
+                        DateTime.Now
+                    )
                 );
                 return;
             }
@@ -193,7 +198,12 @@ namespace Updater
     {
         public void WriteLine(string category, string msg)
         {
-            Log.GoogleInfo(string.Format("Debug - {0}: {1}", category, msg));
+            Log.GoogleInfo(String.Format(
+                "{2:hh:mm:ss} Debug - {0}: {1}",
+                category,
+                msg,
+                DateTime.Now
+            ));
         }
     }
 }
