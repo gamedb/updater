@@ -8,7 +8,7 @@ namespace Updater
     {
         private static void Main(string[] args)
         {
-            Console.Title = "Steam Updater";
+            Console.Title = "Game DB Updater";
 
             // Google
             Environment.SetEnvironmentVariable(
