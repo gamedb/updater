@@ -11,10 +11,7 @@ namespace Updater
             Console.Title = "Game DB Updater";
 
             // Google
-            Environment.SetEnvironmentVariable(
-                "GOOGLE_APPLICATION_CREDENTIALS",
-                Environment.GetEnvironmentVariable("STEAM_GOOGLE_APPLICATION_CREDENTIALS")
-            );
+            Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", "/root/google-auth.json");
 
             // Rollbar
             Log.setupRollbar();
