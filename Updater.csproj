@@ -6,10 +6,10 @@
     <RootNamespace>Updater</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Google.Cloud.Logging.V2" Version="2.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Google.Cloud.Logging.V2" Version="2.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="RabbitMQ.Client" Version="5.1.0" />
-    <PackageReference Include="Rollbar" Version="1.5.0" />
+    <PackageReference Include="Rollbar" Version="2.1.0" />
     <PackageReference Include="SteamKit2" Version="2.1.0" />
     <PackageReference Include="SteamWebAPI2" Version="4.0.8" />
     <PackageReference Include="ValveKeyValue" Version="0.2.1.107" />
