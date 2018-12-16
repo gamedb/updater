@@ -14,17 +14,17 @@ namespace Updater.Consumers
         private static IConnection connection;
         private static IModel channel;
 
-        public const string queueApps = "Apps";
-        protected const string queueAppsData = "Apps_Data";
-        public const string queuePackages = "Packages";
-        protected const string queuePackagesData = "Packages_Data";
-        public const string queueProfiles = "Profiles";
-        protected const string queueProfilesData = "Profiles_Data";
-        public const string queueChangesData = "Changes_Data";
-        private const string queueAppend = "Steam_";
+        public const String queueApps = "Apps";
+        protected const String queueAppsData = "Apps_Data";
+        public const String queuePackages = "Packages";
+        protected const String queuePackagesData = "Packages_Data";
+        public const String queueProfiles = "Profiles";
+        protected const String queueProfilesData = "Profiles_Data";
+        public const String queueChangesData = "Changes_Data";
+        private const String queueAppend = "Steam_";
 
         // Queue -> Consumer
-        public static readonly Dictionary<string, AbstractConsumer> consumers = new Dictionary<string, AbstractConsumer>
+        public static readonly Dictionary<String, AbstractConsumer> consumers = new Dictionary<String, AbstractConsumer>
         {
             {queueApps, new AppConsumer()},
             {queuePackages, new PackageConsumer()},
@@ -37,11 +37,11 @@ namespace Updater.Consumers
             UserName = Environment.GetEnvironmentVariable("STEAM_RABBIT_USER"),
             Password = Environment.GetEnvironmentVariable("STEAM_RABBIT_PASS"),
             HostName = Environment.GetEnvironmentVariable("STEAM_RABBIT_HOST"),
-            Port = int.Parse(Environment.GetEnvironmentVariable("STEAM_RABBIT_PORT"))
+            Port = Int32.Parse(Environment.GetEnvironmentVariable("STEAM_RABBIT_PORT"))
         };
 
         // Abstract
-        protected abstract Task<Tuple<bool, bool>> HandleMessage(BasicDeliverEventArgs msg);
+        protected abstract Task<Tuple<Boolean, Boolean>> HandleMessage(BasicDeliverEventArgs msg);
 
         // Statics
         public static void startConsumers()
@@ -60,7 +60,7 @@ namespace Updater.Consumers
             }
         }
 
-        public static void Produce(string queue, string data)
+        public static void Produce(String queue, String data)
         {
             if (data.Length == 0)
             {
@@ -85,7 +85,7 @@ namespace Updater.Consumers
             }
         }
 
-        private void Consume(string queue)
+        private void Consume(String queue)
         {
             Log.GoogleInfo("Consuming " + queue);
 
@@ -100,7 +100,7 @@ namespace Updater.Consumers
             channel.QueueDeclare(queue, true, false, false);
 
             var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += delegate(object chan, BasicDeliverEventArgs ea)
+            consumer.Received += delegate(Object chan, BasicDeliverEventArgs ea)
             {
                 // Check logged in to Steam
                 if (!Steam.steamClient.IsConnected || !Steam.isLoggedOn)
@@ -139,7 +139,7 @@ namespace Updater.Consumers
             }
         }
 
-        protected async void GetAccessTokens(IEnumerable<uint> apps, IEnumerable<uint> packages)
+        protected async void GetAccessTokens(IEnumerable<UInt32> apps, IEnumerable<UInt32> packages)
         {
             var JobID = Steam.steamApps.PICSGetAccessTokens(apps, packages);
             var callback = await JobID;

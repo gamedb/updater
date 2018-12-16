@@ -6,7 +6,7 @@ namespace Updater
 {
     internal static class ChangeFetcher
     {
-        private static void Main(string[] args)
+        private static void Main(String[] args)
         {
             Console.Title = "Steam Updater";
 

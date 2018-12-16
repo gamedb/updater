@@ -8,13 +8,13 @@ namespace Updater
 {
     public static class Log
     {
-        private const string key = "STEAM_PROXY_ROLLBAR_PRIVATE";
-        private const string proj = "STEAM_GOOGLE_PROJECT";
-        private const string env = "STEAM_ENV";
+        private const String key = "STEAM_PROXY_ROLLBAR_PRIVATE";
+        private const String proj = "STEAM_GOOGLE_PROJECT";
+        private const String env = "STEAM_ENV";
 
         private static readonly LoggingServiceV2Client googleCLient = LoggingServiceV2Client.Create();
 
-        public static void GoogleInfo(string message)
+        public static void GoogleInfo(String message)
         {
             Console.WriteLine(message);
 
@@ -38,7 +38,7 @@ namespace Updater
             var rollbarKey = Environment.GetEnvironmentVariable(key);
             var environment = Environment.GetEnvironmentVariable(env);
 
-            if (string.IsNullOrEmpty(rollbarKey))
+            if (String.IsNullOrEmpty(rollbarKey))
             {
                 Console.WriteLine("Rollbar key environment variable not found");
             }
@@ -53,12 +53,12 @@ namespace Updater
             }
         }
 
-        public static void RollbarError(string message)
+        public static void RollbarError(String message)
         {
             RollbarLocator.RollbarInstance.Error(message);
         }
 
-        public static void RollbarInfo(string message)
+        public static void RollbarInfo(String message)
         {
             RollbarLocator.RollbarInstance.Info(message);
         }
