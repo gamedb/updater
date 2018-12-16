@@ -4,17 +4,18 @@ using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using SteamKit2;
-using Updater.Consumers.Messages;
+using SteamWebAPI2.Utilities;
+using Updater.Consumers;
 
 namespace Updater
 {
     public static class Steam
     {
-        private const string LastChangeFile = "last-changenumber.txt";
+        private const String LastChangeFile = "last-changenumber.txt";
 
-        public static bool quitOnDisconnect;
-        private static uint previousChangeNumber;
-        public static bool isLoggedOn;
+        public static Boolean quitOnDisconnect;
+        private static UInt32 previousChangeNumber;
+        public static Boolean isLoggedOn;
 
         public static SteamClient steamClient;
         private static CallbackManager manager;
@@ -26,7 +27,7 @@ namespace Updater
         public static SteamApps steamApps;
         public static SteamFriends steamFriends;
 
-        public static void startSteam(bool debug)
+        public static void startSteam(Boolean debug)
         {
             // Debug
             DebugLog.AddListener(new DebugListener());
@@ -59,14 +60,14 @@ namespace Updater
             timer2.Start();
         }
 
-        private static void RunWaitCallbacks(object obj, EventArgs args)
+        private static void RunWaitCallbacks(Object obj, EventArgs args)
         {
             timer1.Stop();
             manager.RunWaitCallbacks(TimeSpan.FromSeconds(1));
             timer1.Start();
         }
 
-        private static async void CheckForChanges(object obj, EventArgs args)
+        private static async void CheckForChanges(Object obj, EventArgs args)
         {
             timer2.Stop();
             try
@@ -78,7 +79,7 @@ namespace Updater
                     if (previousChangeNumber == 0 && File.Exists(LastChangeFile))
                     {
                         var contents = File.ReadAllText(LastChangeFile);
-                        previousChangeNumber = contents == "" ? 0 : uint.Parse(contents);
+                        previousChangeNumber = contents == "" ? 0 : UInt32.Parse(contents);
                     }
 
                     // Get latest changes. If more than 5000, returns 0
@@ -100,27 +101,31 @@ namespace Updater
                         );
 
                         // Save apps
-                        Consumers.AbstractConsumer.Produce(
-                            Consumers.AbstractConsumer.queueApps,
-                            string.Join(",", callback.AppChanges.Keys.ToList())
-                        );
+                        var AppMessageIn = new AppMessageIn
+                        {
+                            IDs = callback.AppChanges.Keys.ToArray(),
+                            Time = DateTime.Now.ToUnixTimeStamp()
+                        };
+                        AbstractConsumer.Produce(AbstractConsumer.queueApps, JsonConvert.SerializeObject(AppMessageIn));
+                        Console.WriteLine(JsonConvert.SerializeObject(AppMessageIn));
 
                         // Save packages
-                        Consumers.AbstractConsumer.Produce(
-                            Consumers.AbstractConsumer.queuePackages,
-                            string.Join(",", callback.PackageChanges.Keys.ToList())
-                        );
+                        var PackageMessageIn = new PackageMessageIn
+                        {
+                            IDs = callback.PackageChanges.Keys.ToArray(),
+                            Time = DateTime.Now.ToUnixTimeStamp()
+                        };
+                        AbstractConsumer.Produce(AbstractConsumer.queuePackages, JsonConvert.SerializeObject(PackageMessageIn));
+                        Console.WriteLine(JsonConvert.SerializeObject(PackageMessageIn));
 
                         // Save changes
-                        var message = new ChangeDataMessage
+                        var changeMessageOut = new ChangeMessageOut
                         {
-                            PICSChanges = callback
+                            PICSChanges = callback,
+                            Time = DateTime.Now.ToUnixTimeStamp()
                         };
 
-                        Consumers.AbstractConsumer.Produce(
-                            Consumers.AbstractConsumer.queueChangesData,
-                            JsonConvert.SerializeObject(message)
-                        );
+                        AbstractConsumer.Produce(AbstractConsumer.queueChangesData, JsonConvert.SerializeObject(changeMessageOut));
 
                         // Update change number
                         previousChangeNumber = callback.CurrentChangeNumber;
@@ -196,7 +201,7 @@ namespace Updater
 
     internal class DebugListener : IDebugListener
     {
-        public void WriteLine(string category, string msg)
+        public void WriteLine(String category, String msg)
         {
             Log.GoogleInfo(String.Format(
                 "{2:hh:mm:ss} Debug - {0}: {1}",
@@ -205,5 +210,11 @@ namespace Updater
                 DateTime.Now
             ));
         }
+    }
+
+    public class ChangeMessageOut
+    {
+        public SteamApps.PICSChangesCallback PICSChanges { get; set; }
+        public UInt64 Time { get; set; }
     }
 }

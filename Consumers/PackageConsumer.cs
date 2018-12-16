@@ -1,42 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using RabbitMQ.Client.Events;
-using Updater.Consumers.Messages;
+using static SteamKit2.SteamApps.PICSProductInfoCallback;
 
 namespace Updater.Consumers
 {
     public class PackageConsumer : AbstractConsumer
     {
-        protected override async Task<Tuple<bool, bool>> HandleMessage(BasicDeliverEventArgs msg)
+        protected override async Task<Tuple<Boolean, Boolean>> HandleMessage(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
-            var IDs = msgBody.Split(",").Distinct().ToArray();
 
-            if (msgBody.Length == 0 || IDs.Length == 0)
+            PackageMessageIn payload;
+            try
             {
-                return new Tuple<bool, bool>(false, false);
+                payload = JsonConvert.DeserializeObject<PackageMessageIn>(msgBody);
+            }
+            catch (JsonSerializationException)
+            {
+                Console.WriteLine("Unable to deserialize package: " + msgBody);
+                return new Tuple<Boolean, Boolean>(true, false);
             }
 
-            var packageIDs = Array.ConvertAll(IDs, Convert.ToUInt32);
-            var JobID = Steam.steamApps.PICSGetProductInfo(new List<uint>(), packageIDs, false);
+            if (payload.IDs.Length == 0)
+            {
+                return new Tuple<Boolean, Boolean>(false, false);
+            }
+
+            var packageIDs = Array.ConvertAll(payload.IDs, Convert.ToUInt32);
+            var JobID = Steam.steamApps.PICSGetProductInfo(new List<UInt32>(), packageIDs, false);
             var callback = await JobID;
 
             if (!callback.Complete)
             {
-                return new Tuple<bool, bool>(false, true);
+                return new Tuple<Boolean, Boolean>(false, true);
             }
 
             foreach (var result in callback.Results)
             {
                 foreach (var item in result.Packages)
                 {
-                    var message = new PackageDataMessage
+                    var message = new PackageMessageOut
                     {
-                        PICSPackageInfo = item.Value
+                        PICSPackageInfo = item.Value,
+                        Payload = payload
                     };
 
                     Produce(queuePackagesData, JsonConvert.SerializeObject(message));
@@ -54,7 +64,19 @@ namespace Updater.Consumers
                 }
             }
 
-            return new Tuple<bool, bool>(true, false);
+            return new Tuple<Boolean, Boolean>(true, false);
         }
+    }
+
+    public class PackageMessageIn
+    {
+        public UInt32[] IDs { get; set; }
+        public UInt64 Time { get; set; }
+    }
+
+    public class PackageMessageOut
+    {
+        public PICSProductInfo PICSPackageInfo { get; set; }
+        public PackageMessageIn Payload { get; set; }
     }
 }
