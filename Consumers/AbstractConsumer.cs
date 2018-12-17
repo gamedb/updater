@@ -11,8 +11,8 @@ namespace Updater.Consumers
 {
     public abstract class AbstractConsumer
     {
-        private static IConnection connection;
-        private static IModel channel;
+        private static IConnection producerConnection;
+        private static IConnection consumerConnection;
 
         public const String queueApps = "Apps";
         protected const String queueAppsData = "Apps_Data";
@@ -37,7 +37,8 @@ namespace Updater.Consumers
             UserName = Environment.GetEnvironmentVariable("STEAM_RABBIT_USER"),
             Password = Environment.GetEnvironmentVariable("STEAM_RABBIT_PASS"),
             HostName = Environment.GetEnvironmentVariable("STEAM_RABBIT_HOST"),
-            Port = Int32.Parse(Environment.GetEnvironmentVariable("STEAM_RABBIT_PORT"))
+            Port = Int32.Parse(Environment.GetEnvironmentVariable("STEAM_RABBIT_PORT")),
+            RequestedHeartbeat = 10
         };
 
         // Abstract
@@ -69,7 +70,8 @@ namespace Updater.Consumers
 
             try
             {
-                connect();
+                var connection = getProducerConnection();
+                var channel = connection.CreateModel();
 
                 channel.QueueDeclare(queueAppend + queue, true, false, false);
 
@@ -78,6 +80,8 @@ namespace Updater.Consumers
 
                 var bytes = Encoding.UTF8.GetBytes(data);
                 channel.BasicPublish("", queueAppend + queue, properties, bytes);
+
+                channel.Close();
             }
             catch (Exception ex)
             {
@@ -89,13 +93,9 @@ namespace Updater.Consumers
         {
             Log.GoogleInfo("Consuming " + queue);
 
-            connect();
-
-            connection.ConnectionShutdown += (s, e) =>
-            {
-                connection.Dispose();
-                Consume(queue);
-            };
+            var connection = getConsumerConnection();
+            var channel = connection.CreateModel();
+            channel.BasicQos(0, 10, false);
 
             channel.QueueDeclare(queue, true, false, false);
 
@@ -113,7 +113,7 @@ namespace Updater.Consumers
 
                 // Consume message
                 var requeue = HandleMessage(ea);
-                
+
                 if (requeue.Result)
                 {
                     Produce(queue, JsonConvert.SerializeObject(ea.Body));
@@ -125,13 +125,37 @@ namespace Updater.Consumers
             channel.BasicConsume(queue, false, consumer);
         }
 
-        public static void connect()
+        public static IConnection getProducerConnection()
         {
-            if (connection == null || !connection.IsOpen || channel == null || !channel.IsOpen)
+            if (producerConnection == null || !producerConnection.IsOpen || producerConnection == null || !producerConnection.IsOpen)
             {
-                connection = connectionFactory.CreateConnection();
-                channel = connection.CreateModel();
+                producerConnection = connectionFactory.CreateConnection();
+
+                producerConnection.ConnectionShutdown += (s, e) =>
+                {
+                    producerConnection.Dispose();
+                    producerConnection = null;
+                    throw new Exception("Producer connection lost");
+                };
             }
+
+            return producerConnection;
+        }
+
+        public static IConnection getConsumerConnection()
+        {
+            if (consumerConnection == null || !consumerConnection.IsOpen || consumerConnection == null || !consumerConnection.IsOpen)
+            {
+                consumerConnection = connectionFactory.CreateConnection();
+
+                consumerConnection.ConnectionShutdown += (s, e) =>
+                {
+                    consumerConnection.Dispose();
+                    consumerConnection = null;
+                };
+            }
+
+            return consumerConnection;
         }
 
         protected async void GetAccessTokens(IEnumerable<UInt32> apps, IEnumerable<UInt32> packages)

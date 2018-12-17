@@ -24,7 +24,8 @@ namespace Updater
             {
                 try
                 {
-                    AbstractConsumer.connect();
+                    AbstractConsumer.getProducerConnection();
+                    AbstractConsumer.getConsumerConnection();
                     break;
                 }
                 catch (Exception ex)
