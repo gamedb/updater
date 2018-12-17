@@ -107,7 +107,6 @@ namespace Updater
                             Time = DateTime.Now.ToUnixTimeStamp()
                         };
                         AbstractConsumer.Produce(AbstractConsumer.queueApps, JsonConvert.SerializeObject(AppMessageIn));
-                        Console.WriteLine(JsonConvert.SerializeObject(AppMessageIn));
 
                         // Save packages
                         var PackageMessageIn = new PackageMessageIn
@@ -116,7 +115,6 @@ namespace Updater
                             Time = DateTime.Now.ToUnixTimeStamp()
                         };
                         AbstractConsumer.Produce(AbstractConsumer.queuePackages, JsonConvert.SerializeObject(PackageMessageIn));
-                        Console.WriteLine(JsonConvert.SerializeObject(PackageMessageIn));
 
                         // Save changes
                         var changeMessageOut = new ChangeMessageOut
@@ -124,7 +122,6 @@ namespace Updater
                             PICSChanges = callback,
                             Time = DateTime.Now.ToUnixTimeStamp()
                         };
-
                         AbstractConsumer.Produce(AbstractConsumer.queueChangesData, JsonConvert.SerializeObject(changeMessageOut));
 
                         // Update change number
