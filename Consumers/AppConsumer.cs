@@ -10,10 +10,10 @@ namespace Updater.Consumers
 {
     public class AppConsumer : AbstractConsumer
     {
-        protected override async Task<Tuple<Boolean, Boolean>> HandleMessage(BasicDeliverEventArgs msg)
+        protected override async Task<Boolean> HandleMessage(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
-            
+
             AppMessageIn payload;
             try
             {
@@ -22,12 +22,12 @@ namespace Updater.Consumers
             catch (JsonSerializationException)
             {
                 Console.WriteLine("Unable to deserialize app: " + msgBody);
-                return new Tuple<Boolean, Boolean>(true, false);
+                return false;
             }
-            
+
             if (payload.IDs.Length == 0)
             {
-                return new Tuple<Boolean, Boolean>(false, false);
+                return false;
             }
 
             var appIDs = Array.ConvertAll(payload.IDs, Convert.ToUInt32);
@@ -36,7 +36,7 @@ namespace Updater.Consumers
 
             if (!callback.Complete)
             {
-                return new Tuple<Boolean, Boolean>(false, true);
+                return true;
             }
 
             foreach (var result in callback.Results)
@@ -64,7 +64,7 @@ namespace Updater.Consumers
                 }
             }
 
-            return new Tuple<Boolean, Boolean>(true, false);
+            return false;
         }
     }
 

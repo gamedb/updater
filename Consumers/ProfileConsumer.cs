@@ -10,7 +10,7 @@ namespace Updater.Consumers
 {
     public class ProfileConsumer : AbstractConsumer
     {
-        protected override async Task<Tuple<Boolean, Boolean>> HandleMessage(BasicDeliverEventArgs msg)
+        protected override async Task<Boolean> HandleMessage(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
@@ -22,12 +22,12 @@ namespace Updater.Consumers
             catch (JsonSerializationException)
             {
                 Console.WriteLine("Unable to deserialize profile: " + msgBody);
-                return new Tuple<Boolean, Boolean>(true, false);
+                return false;
             }
 
             if (payload.ID == 0)
             {
-                return new Tuple<Boolean, Boolean>(false, false);
+                return false;
             }
 
             var id = new SteamID();
@@ -43,7 +43,7 @@ namespace Updater.Consumers
 
             Produce(queueProfilesData, JsonConvert.SerializeObject(message));
 
-            return new Tuple<Boolean, Boolean>(true, false);
+            return false;
         }
     }
 

@@ -41,7 +41,7 @@ namespace Updater.Consumers
         };
 
         // Abstract
-        protected abstract Task<Tuple<Boolean, Boolean>> HandleMessage(BasicDeliverEventArgs msg);
+        protected abstract Task<Boolean> HandleMessage(BasicDeliverEventArgs msg);
 
         // Statics
         public static void startConsumers()
@@ -112,19 +112,14 @@ namespace Updater.Consumers
                 }
 
                 // Consume message
-                var response = HandleMessage(ea);
-                var ack = response.Result.Item1;
-                var requeue = response.Result.Item2;
+                var requeue = HandleMessage(ea);
+                
+                if (requeue.Result)
+                {
+                    Produce(queue, JsonConvert.SerializeObject(ea.Body));
+                }
 
-                if (ack)
-                {
-                    channel.BasicAck(ea.DeliveryTag, false);
-                }
-                else
-                {
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
-                    channel.BasicNack(ea.DeliveryTag, false, requeue);
-                }
+                channel.BasicAck(ea.DeliveryTag, false);
             };
 
             channel.BasicConsume(queue, false, consumer);
