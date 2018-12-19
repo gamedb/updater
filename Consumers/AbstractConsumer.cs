@@ -127,7 +127,7 @@ namespace Updater.Consumers
 
         public static IConnection getProducerConnection()
         {
-            if (producerConnection == null || !producerConnection.IsOpen || producerConnection == null || !producerConnection.IsOpen)
+            if (producerConnection == null || !producerConnection.IsOpen)
             {
                 producerConnection = connectionFactory.CreateConnection();
 
@@ -144,7 +144,7 @@ namespace Updater.Consumers
 
         public static IConnection getConsumerConnection()
         {
-            if (consumerConnection == null || !consumerConnection.IsOpen || consumerConnection == null || !consumerConnection.IsOpen)
+            if (consumerConnection == null || !consumerConnection.IsOpen)
             {
                 consumerConnection = connectionFactory.CreateConnection();
 
