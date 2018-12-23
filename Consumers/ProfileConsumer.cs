@@ -31,8 +31,7 @@ namespace Updater.Consumers
             }
 
             var id = new SteamID();
-            id.SetFromUInt64(UInt64.Parse(msgBody));
-
+            id.SetFromUInt64(payload.ID);
             var JobID = Steam.steamFriends.RequestProfileInfo(id);
 
             var message = new ProfileMessageOut
