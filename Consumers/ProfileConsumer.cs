@@ -10,43 +10,32 @@ namespace Updater.Consumers
 {
     public class ProfileConsumer : AbstractConsumer
     {
-        protected override async Task<Boolean> HandleMessage(BasicDeliverEventArgs msg)
+        protected override async Task HandleMessage(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
-            ProfileMessageIn payload;
+            ProfileMessage payload;
             try
             {
-                payload = JsonConvert.DeserializeObject<ProfileMessageIn>(msgBody);
+                payload = JsonConvert.DeserializeObject<ProfileMessage>(msgBody);
             }
             catch (JsonSerializationException)
             {
                 Console.WriteLine("Unable to deserialize profile: " + msgBody);
-                return false;
-            }
-
-            if (payload.ID == 0)
-            {
-                return false;
+                return;
             }
 
             var id = new SteamID();
             id.SetFromUInt64(payload.ID);
             var JobID = Steam.steamFriends.RequestProfileInfo(id);
 
-            var message = new ProfileMessageOut
-            {
-                ProfileInfo = await JobID,
-                Payload = payload
-            };
+            payload.PICSProfileInfo = await JobID;
 
-            Produce(queueProfilesData, JsonConvert.SerializeObject(message));
-
-            return false;
+            Produce(queue_go_profiles, payload);
         }
     }
 
-    public class ProfileMessageIn : BaseMessage
+    public abstract class ProfileMessage : BaseMessage
     {
         public UInt64 ID { get; set; }
         public ProfileInfoCallback PICSProfileInfo { get; set; }

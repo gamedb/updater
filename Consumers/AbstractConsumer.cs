@@ -14,21 +14,21 @@ namespace Updater.Consumers
         private static IConnection producerConnection;
         private static IConnection consumerConnection;
 
-        public const String queueApps = "Apps";
-        protected const String queueAppsData = "Apps_Data";
-        public const String queuePackages = "Packages";
-        protected const String queuePackagesData = "Packages_Data";
-        public const String queueProfiles = "Profiles";
-        protected const String queueProfilesData = "Profiles_Data";
-        public const String queueChangesData = "Changes_Data";
-        private const String queueAppend = "Steam_";
+        public const String queue_cs_apps = "GameDB_CS_Apps";
+        public const String queue_cs_packages = "GameDB_CS_Packages";
+        public const String queue_cs_profiles = "GameDB_CS_Profiles";
+
+        public const String queue_go_apps = "GameDB_Go_Apps";
+        public const String queue_go_packages = "GameDB_Go_Packages";
+        public const String queue_go_profiles = "GameDB_Go_Profiles";
+        public const String queue_go_changes = "GameDB_Go_Changes";
 
         // Queue -> Consumer
         public static readonly Dictionary<String, AbstractConsumer> consumers = new Dictionary<String, AbstractConsumer>
         {
-            {queueApps, new AppConsumer()},
-            {queuePackages, new PackageConsumer()},
-            {queueProfiles, new ProfileConsumer()}
+            {queue_cs_apps, new AppConsumer()},
+            {queue_cs_packages, new PackageConsumer()},
+            {queue_cs_profiles, new ProfileConsumer()}
         };
 
         //
@@ -42,50 +42,63 @@ namespace Updater.Consumers
         };
 
         // Abstract
-        protected abstract Task<Boolean> HandleMessage(BasicDeliverEventArgs msg);
+        protected abstract Task HandleMessage(BasicDeliverEventArgs msg);
 
         // Statics
         public static void startConsumers()
         {
-            foreach (var entry in consumers)
+            foreach (var (key, consumer) in consumers)
             {
                 var thread = new Thread(() =>
                 {
                     Thread.CurrentThread.IsBackground = true;
 
-                    var consumer = entry.Value;
-                    consumer.Consume(queueAppend + entry.Key);
+                    consumer.Consume(key);
                 });
 
                 thread.Start();
             }
         }
 
-        public static void Produce(String queue, String data)
+        public static void Produce(String queue, BaseMessage payload)
         {
-            if (data.Length == 0)
+            if (payload.Attempt == 0)
             {
-                return;
+                payload.Attempt = 1;
             }
+
+            if (payload.FirstSeen == DateTime.MinValue)
+            {
+                payload.FirstSeen = DateTime.Now;
+            }
+
+            if (payload.OriginalQueue == "")
+            {
+                // If Go errors, we want to put it back into the go queue
+                //payload.OriginalQueue = queue;
+            }
+
+
+            var payloadString = JsonConvert.SerializeObject(payload);
 
             try
             {
                 var connection = getProducerConnection();
                 var channel = connection.CreateModel();
 
-                channel.QueueDeclare(queueAppend + queue, true, false, false);
+                channel.QueueDeclare(queue, true, false, false);
 
                 var properties = channel.CreateBasicProperties();
                 properties.Persistent = true;
 
-                var bytes = Encoding.UTF8.GetBytes(data);
-                channel.BasicPublish("", queueAppend + queue, properties, bytes);
+                var bytes = Encoding.UTF8.GetBytes(payloadString);
+                channel.BasicPublish("", queue, properties, bytes);
 
                 channel.Close();
             }
             catch (Exception ex)
             {
-                Log.RollbarError("Failed producing to " + queue + " with data: " + data + " - " + ex.Message);
+                Log.RollbarError("Failed producing to " + queue + " with data: " + payloadString + " - " + ex.Message);
             }
         }
 
@@ -100,26 +113,21 @@ namespace Updater.Consumers
             channel.QueueDeclare(queue, true, false, false);
 
             var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += delegate(Object chan, BasicDeliverEventArgs ea)
+            consumer.Received += delegate(Object chan, BasicDeliverEventArgs msg)
             {
                 // Check logged in to Steam
                 if (!Steam.steamClient.IsConnected || !Steam.isLoggedOn)
                 {
                     Thread.Sleep(TimeSpan.FromSeconds(1));
                     Log.GoogleInfo("Waiting to login before consuming");
-                    channel.BasicNack(ea.DeliveryTag, false, true);
+                    channel.BasicNack(msg.DeliveryTag, false, true);
                     return;
                 }
 
                 // Consume message
-                var requeue = HandleMessage(ea);
+                HandleMessage(msg);
 
-                if (requeue.Result)
-                {
-                    Produce(queue, JsonConvert.SerializeObject(ea.Body));
-                }
-
-                channel.BasicAck(ea.DeliveryTag, false);
+                channel.BasicAck(msg.DeliveryTag, false);
             };
 
             channel.BasicConsume(queue, false, consumer);
@@ -169,11 +177,11 @@ namespace Updater.Consumers
 
     public class BaseMessage
     {
-        public Object Message { get; set; };
-        public DateTime FirstSeen { get; set; };
-        public Int32 Attempt { get; set; };
-        public String OriginalQueue { get; set; };
-        public Int32 MaxAttempts { get; set; };
-        public Int32 MaxTime { get; set; };
+        public Object Message { get; set; }
+        public DateTime FirstSeen { get; set; }
+        public Int32 Attempt { get; set; }
+        public String OriginalQueue { get; set; }
+        public Int32 MaxAttempts { get; set; }
+        public Int32 MaxTime { get; set; }
     }
 }

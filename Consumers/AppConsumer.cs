@@ -10,7 +10,7 @@ namespace Updater.Consumers
 {
     public class AppConsumer : AbstractConsumer
     {
-        protected override async Task<Boolean> HandleMessage(BasicDeliverEventArgs msg)
+        protected override async Task HandleMessage(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
@@ -22,34 +22,27 @@ namespace Updater.Consumers
             catch (JsonSerializationException)
             {
                 Console.WriteLine("Unable to deserialize app: " + msgBody);
-                return false;
+                return;
             }
 
-            if (payload.IDs.Length == 0)
-            {
-                return false;
-            }
-
-            var appIDs = Array.ConvertAll(payload.IDs, Convert.ToUInt32);
-            var JobID = Steam.steamApps.PICSGetProductInfo(appIDs, new List<UInt32>(), false, false);
+            var JobID = Steam.steamApps.PICSGetProductInfo(payload.ID, null, false, false);
             var callback = await JobID;
 
             if (!callback.Complete)
             {
-                return true;
+                // Retry
+                Produce(queue_cs_apps, payload);
+                return;
             }
 
             foreach (var result in callback.Results)
             {
                 foreach (var item in result.Apps)
                 {
-                    var message = new AppMessageOut
-                    {
-                        PICSAppInfo = item.Value,
-                        Payload = payload
-                    };
+                    payload.PICSAppInfo = item.Value;
 
-                    Produce(queueAppsData, JsonConvert.SerializeObject(message));
+                    // Send to Go
+                    Produce(queue_go_apps, payload);
                 }
 
                 // Log unknowns
@@ -63,12 +56,10 @@ namespace Updater.Consumers
                     Log.GoogleInfo("Unknown package: " + entry);
                 }
             }
-
-            return false;
         }
     }
 
-    public class AppMessage : BaseMessage
+    public abstract class AppMessage : BaseMessage
     {
         public UInt32 ID { get; set; }
         public PICSProductInfo PICSAppInfo { get; set; }

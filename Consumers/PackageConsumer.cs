@@ -10,46 +10,39 @@ namespace Updater.Consumers
 {
     public class PackageConsumer : AbstractConsumer
     {
-        protected override async Task<Boolean> HandleMessage(BasicDeliverEventArgs msg)
+        protected override async Task HandleMessage(BasicDeliverEventArgs msg)
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
-            PackageMessageIn payload;
+            PackageMessage payload;
             try
             {
-                payload = JsonConvert.DeserializeObject<PackageMessageIn>(msgBody);
+                payload = JsonConvert.DeserializeObject<PackageMessage>(msgBody);
             }
             catch (JsonSerializationException)
             {
                 Console.WriteLine("Unable to deserialize package: " + msgBody);
-                return false;
+                return;
             }
 
-            if (payload.IDs.Length == 0)
-            {
-                return false;
-            }
-
-            var packageIDs = Array.ConvertAll(payload.IDs, Convert.ToUInt32);
-            var JobID = Steam.steamApps.PICSGetProductInfo(new List<UInt32>(), packageIDs, false);
+            var JobID = Steam.steamApps.PICSGetProductInfo(null, payload.ID, false, false);
             var callback = await JobID;
 
             if (!callback.Complete)
             {
-                return true;
+                // Retry
+                Produce(queue_cs_packages, payload);
+                return;
             }
 
             foreach (var result in callback.Results)
             {
                 foreach (var item in result.Packages)
                 {
-                    var message = new PackageMessageOut
-                    {
-                        PICSPackageInfo = item.Value,
-                        Payload = payload
-                    };
+                    payload.PICSPackageInfo = item.Value;
 
-                    Produce(queuePackagesData, JsonConvert.SerializeObject(message));
+                    // Send to Go
+                    Produce(queue_go_packages, payload);
                 }
 
                 // Log unknowns
@@ -63,14 +56,12 @@ namespace Updater.Consumers
                     Log.GoogleInfo("Unknown package: " + entry);
                 }
             }
-
-            return false;
         }
     }
 
-    public class PackageMessageIn : BaseMessage
+    public abstract class PackageMessage : BaseMessage
     {
-        public UInt32 ID { get; set; }¬
+        public UInt32 ID { get; set; }
         public PICSProductInfo PICSPackageInfo { get; set; }
     }
 }
