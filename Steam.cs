@@ -101,7 +101,7 @@ namespace Updater
                         );
 
                         // Save apps
-                        var AppMessageIn = new AppMessageIn
+                        var AppMessageIn = new AppMessage
                         {
                             IDs = callback.AppChanges.Keys.ToArray(),
                             Time = DateTime.Now.ToUnixTimeStamp()

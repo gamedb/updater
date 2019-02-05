@@ -46,15 +46,9 @@ namespace Updater.Consumers
         }
     }
 
-    public class ProfileMessageIn
+    public class ProfileMessageIn : BaseMessage
     {
         public UInt64 ID { get; set; }
-        public UInt64 Time { get; set; }
-    }
-
-    public class ProfileMessageOut
-    {
-        public ProfileInfoCallback ProfileInfo { get; set; }
-        public ProfileMessageIn Payload { get; set; }
+        public ProfileInfoCallback PICSProfileInfo { get; set; }
     }
 }

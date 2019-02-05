@@ -68,15 +68,9 @@ namespace Updater.Consumers
         }
     }
 
-    public class PackageMessageIn
+    public class PackageMessageIn : BaseMessage
     {
-        public UInt32[] IDs { get; set; }
-        public UInt64 Time { get; set; }
-    }
-
-    public class PackageMessageOut
-    {
+        public UInt32 ID { get; set; }¬
         public PICSProductInfo PICSPackageInfo { get; set; }
-        public PackageMessageIn Payload { get; set; }
     }
 }

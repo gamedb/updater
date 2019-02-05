@@ -166,4 +166,14 @@ namespace Updater.Consumers
             Console.WriteLine(JsonConvert.SerializeObject(callback));
         }
     }
+
+    public class BaseMessage
+    {
+        public Object Message { get; set; };
+        public DateTime FirstSeen { get; set; };
+        public Int32 Attempt { get; set; };
+        public String OriginalQueue { get; set; };
+        public Int32 MaxAttempts { get; set; };
+        public Int32 MaxTime { get; set; };
+    }
 }

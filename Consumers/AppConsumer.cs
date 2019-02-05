@@ -14,10 +14,10 @@ namespace Updater.Consumers
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
-            AppMessageIn payload;
+            AppMessage payload;
             try
             {
-                payload = JsonConvert.DeserializeObject<AppMessageIn>(msgBody);
+                payload = JsonConvert.DeserializeObject<AppMessage>(msgBody);
             }
             catch (JsonSerializationException)
             {
@@ -68,15 +68,9 @@ namespace Updater.Consumers
         }
     }
 
-    public class AppMessageIn
+    public class AppMessage : BaseMessage
     {
-        public UInt32[] IDs { get; set; }
-        public UInt64 Time { get; set; }
-    }
-
-    public class AppMessageOut
-    {
+        public UInt32 ID { get; set; }
         public PICSProductInfo PICSAppInfo { get; set; }
-        public AppMessageIn Payload { get; set; }
     }
 }
