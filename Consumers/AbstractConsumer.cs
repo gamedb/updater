@@ -60,26 +60,20 @@ namespace Updater.Consumers
             }
         }
 
-        public static void Produce(String queue, BaseMessage payload)
+        public static void Produce(String queue, object message)
         {
-            if (payload.Attempt == 0)
+            var payload = new BaseMessage
             {
-                payload.Attempt = 1;
-            }
+                Attempt = 1,
+                FirstSeen = DateTime.Now,
+                OriginalQueue = queue,
+                Message = message
+            };
 
-            if (payload.FirstSeen == DateTime.MinValue)
-            {
-                payload.FirstSeen = DateTime.Now;
-            }
+            var env = Environment.GetEnvironmentVariable("STEAM_ENV");
+            var formatting = env == "local" ? Formatting.Indented : Formatting.None;
 
-            if (payload.OriginalQueue == "")
-            {
-                // If Go errors, we want to put it back into the go queue
-                //payload.OriginalQueue = queue;
-            }
-
-
-            var payloadString = JsonConvert.SerializeObject(payload);
+            var payloadString = JsonConvert.SerializeObject(payload, formatting);
 
             try
             {
@@ -177,11 +171,22 @@ namespace Updater.Consumers
 
     public class BaseMessage
     {
+        [JsonProperty(PropertyName = "message")]
         public Object Message { get; set; }
+        
+        [JsonProperty(PropertyName = "first_seen")]
         public DateTime FirstSeen { get; set; }
+        
+        [JsonProperty(PropertyName = "attempt")]
         public Int32 Attempt { get; set; }
+        
+        [JsonProperty(PropertyName = "original_queue")]
         public String OriginalQueue { get; set; }
+        
+        [JsonProperty(PropertyName = "max_attempts")]
         public Int32 MaxAttempts { get; set; }
+        
+        [JsonProperty(PropertyName = "max_time")]
         public Int32 MaxTime { get; set; }
     }
 }

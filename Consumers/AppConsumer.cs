@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -21,7 +20,7 @@ namespace Updater.Consumers
             }
             catch (JsonSerializationException)
             {
-                Console.WriteLine("Unable to deserialize app: " + msgBody);
+                Log.GoogleInfo("Unable to deserialize app: " + msgBody);
                 return;
             }
 
@@ -49,19 +48,24 @@ namespace Updater.Consumers
                 foreach (var entry in result.UnknownApps)
                 {
                     Log.GoogleInfo("Unknown app: " + entry);
+                    payload.PICSAppInfo = null;
+                    Produce(queue_go_apps, payload);
                 }
 
                 foreach (var entry in result.UnknownPackages)
                 {
                     Log.GoogleInfo("Unknown package: " + entry);
+                    payload.PICSAppInfo = null;
+                    Produce(queue_go_apps, payload);
                 }
             }
         }
     }
 
-    public abstract class AppMessage : BaseMessage
+    public abstract class AppMessage
     {
-        public UInt32 ID { get; set; }
-        public PICSProductInfo PICSAppInfo { get; set; }
+        [JsonProperty(PropertyName = "id")]
+        public UInt32 ID;
+        public PICSProductInfo PICSAppInfo;
     }
 }

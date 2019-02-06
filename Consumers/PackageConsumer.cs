@@ -21,7 +21,7 @@ namespace Updater.Consumers
             }
             catch (JsonSerializationException)
             {
-                Console.WriteLine("Unable to deserialize package: " + msgBody);
+                Log.GoogleInfo("Unable to deserialize package: " + msgBody);
                 return;
             }
 
@@ -39,29 +39,33 @@ namespace Updater.Consumers
             {
                 foreach (var item in result.Packages)
                 {
-                    payload.PICSPackageInfo = item.Value;
-
                     // Send to Go
+                    payload.PICSPackageInfo = item.Value;
                     Produce(queue_go_packages, payload);
                 }
 
-                // Log unknowns
+                // Unknowns
                 foreach (var entry in result.UnknownApps)
                 {
                     Log.GoogleInfo("Unknown app: " + entry);
+                    payload.PICSPackageInfo = null;
+                    Produce(queue_go_packages, payload);
                 }
 
                 foreach (var entry in result.UnknownPackages)
                 {
                     Log.GoogleInfo("Unknown package: " + entry);
+                    payload.PICSPackageInfo = null;
+                    Produce(queue_go_packages, payload);
                 }
             }
         }
     }
 
-    public abstract class PackageMessage : BaseMessage
+    public abstract class PackageMessage
     {
-        public UInt32 ID { get; set; }
-        public PICSProductInfo PICSPackageInfo { get; set; }
+        [JsonProperty(PropertyName = "id")]
+        public UInt32 ID;
+        public PICSProductInfo PICSPackageInfo;
     }
 }

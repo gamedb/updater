@@ -29,6 +29,8 @@ namespace Updater
 
         public static void startSteam(Boolean debug)
         {
+            var env = Environment.GetEnvironmentVariable("STEAM_ENV");
+            
             // Debug
             DebugLog.AddListener(new DebugListener());
             DebugLog.Enabled = debug;
@@ -51,12 +53,12 @@ namespace Updater
 
             timer1 = new System.Timers.Timer();
             timer1.Elapsed += RunWaitCallbacks;
-            timer1.Interval = TimeSpan.FromSeconds(10).TotalMilliseconds;
+            timer1.Interval = TimeSpan.FromSeconds(env == "local" ? 1 : 10).TotalMilliseconds;
             timer1.Start();
 
             timer2 = new System.Timers.Timer();
             timer2.Elapsed += CheckForChanges;
-            timer2.Interval = TimeSpan.FromSeconds(60).TotalMilliseconds;
+            timer2.Interval = TimeSpan.FromSeconds(env == "local" ? 5 : 60).TotalMilliseconds;
             timer2.Start();
         }
 

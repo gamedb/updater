@@ -21,23 +21,25 @@ namespace Updater.Consumers
             }
             catch (JsonSerializationException)
             {
-                Console.WriteLine("Unable to deserialize profile: " + msgBody);
+                Log.GoogleInfo("Unable to deserialize profile: " + msgBody);
                 return;
             }
 
             var id = new SteamID();
             id.SetFromUInt64(payload.ID);
             var JobID = Steam.steamFriends.RequestProfileInfo(id);
+            var callback = await JobID;
 
-            payload.PICSProfileInfo = await JobID;
+            payload.PICSProfileInfo = callback;
 
             Produce(queue_go_profiles, payload);
         }
     }
 
-    public abstract class ProfileMessage : BaseMessage
+    public abstract class ProfileMessage
     {
-        public UInt64 ID { get; set; }
-        public ProfileInfoCallback PICSProfileInfo { get; set; }
+        [JsonProperty(PropertyName = "id")]
+        public UInt64 ID;
+        public ProfileInfoCallback PICSProfileInfo;
     }
 }
