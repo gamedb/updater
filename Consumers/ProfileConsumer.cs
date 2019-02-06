@@ -14,10 +14,11 @@ namespace Updater.Consumers
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
-            ProfileMessage payload;
+            // Get the full payload
+            BaseMessage payload;
             try
             {
-                payload = JsonConvert.DeserializeObject<ProfileMessage>(msgBody);
+                payload = JsonConvert.DeserializeObject<BaseMessage>(msgBody);
             }
             catch (JsonSerializationException)
             {
@@ -25,21 +26,38 @@ namespace Updater.Consumers
                 return;
             }
 
+            // Get the message in the payload
+            ProfileMessage message;
+            try
+            {
+                message = JsonConvert.DeserializeObject<ProfileMessage>(payload.Message.ToString());
+            }
+            catch (Exception)
+            {
+                Log.GoogleInfo("Unable to deserialize app message: " + payload.Message);
+                return;
+            }
+
             var id = new SteamID();
-            id.SetFromUInt64(payload.ID);
+            id.SetFromUInt64(message.ID);
             var JobID = Steam.steamFriends.RequestProfileInfo(id);
             var callback = await JobID;
 
-            payload.PICSProfileInfo = callback;
+            payload.Message = new ProfileMessage
+            {
+                ID = message.ID,
+                PICSProfileInfo = callback
+            };
 
             Produce(queue_go_profiles, payload);
         }
     }
 
-    public abstract class ProfileMessage
+    public class ProfileMessage
     {
         [JsonProperty(PropertyName = "id")]
         public UInt64 ID;
+
         public ProfileInfoCallback PICSProfileInfo;
     }
 }

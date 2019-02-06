@@ -13,10 +13,11 @@ namespace Updater.Consumers
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
-            AppMessage payload;
+            // Get the full payload
+            BaseMessage payload;
             try
             {
-                payload = JsonConvert.DeserializeObject<AppMessage>(msgBody);
+                payload = JsonConvert.DeserializeObject<BaseMessage>(msgBody);
             }
             catch (JsonSerializationException)
             {
@@ -24,48 +25,76 @@ namespace Updater.Consumers
                 return;
             }
 
-            var JobID = Steam.steamApps.PICSGetProductInfo(payload.ID, null, false, false);
+            // Get the message in the payload
+            AppMessage message;
+            try
+            {
+                message = JsonConvert.DeserializeObject<AppMessage>(payload.Message.ToString());
+            }
+            catch (Exception)
+            {
+                Log.GoogleInfo("Unable to deserialize app message: " + payload.Message);
+                return;
+            }
+
+            var JobID = Steam.steamApps.PICSGetProductInfo(message.ID, null, false, false);
             var callback = await JobID;
 
             if (!callback.Complete)
             {
                 // Retry
-                Produce(queue_cs_apps, payload);
+                Produce(queue_cs_apps, payload, true);
                 return;
             }
 
             foreach (var result in callback.Results)
             {
+                // Send app
                 foreach (var item in result.Apps)
                 {
-                    payload.PICSAppInfo = item.Value;
+                    payload.Message = new AppMessage
+                    {
+                        ID = message.ID,
+                        PICSAppInfo = item.Value
+                    };
 
-                    // Send to Go
                     Produce(queue_go_apps, payload);
                 }
 
-                // Log unknowns
+                // Send unknown apps
                 foreach (var entry in result.UnknownApps)
                 {
                     Log.GoogleInfo("Unknown app: " + entry);
-                    payload.PICSAppInfo = null;
-                    Produce(queue_go_apps, payload);
-                }
 
-                foreach (var entry in result.UnknownPackages)
-                {
-                    Log.GoogleInfo("Unknown package: " + entry);
-                    payload.PICSAppInfo = null;
+                    payload.Message = new AppMessage
+                    {
+                        ID = entry,
+                        PICSAppInfo = null
+                    };
+
                     Produce(queue_go_apps, payload);
                 }
             }
         }
     }
 
-    public abstract class AppMessage
+    public class AppMessage
     {
         [JsonProperty(PropertyName = "id")]
         public UInt32 ID;
+
         public PICSProductInfo PICSAppInfo;
+
+        public static BaseMessage create(UInt32 id, PICSProductInfo pics = null)
+        {
+            return new BaseMessage
+            {
+                Message = new AppMessage
+                {
+                    ID = id,
+                    PICSAppInfo = pics
+                }
+            };
+        }
     }
 }

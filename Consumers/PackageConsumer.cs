@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -14,10 +13,11 @@ namespace Updater.Consumers
         {
             var msgBody = Encoding.UTF8.GetString(msg.Body);
 
-            PackageMessage payload;
+            // Get the full payload
+            BaseMessage payload;
             try
             {
-                payload = JsonConvert.DeserializeObject<PackageMessage>(msgBody);
+                payload = JsonConvert.DeserializeObject<BaseMessage>(msgBody);
             }
             catch (JsonSerializationException)
             {
@@ -25,47 +25,74 @@ namespace Updater.Consumers
                 return;
             }
 
-            var JobID = Steam.steamApps.PICSGetProductInfo(null, payload.ID, false, false);
+            // Get the message in the payload
+            PackageMessage message;
+            try
+            {
+                message = JsonConvert.DeserializeObject<PackageMessage>(payload.Message.ToString());
+            }
+            catch (Exception)
+            {
+                Log.GoogleInfo("Unable to deserialize app message: " + payload.Message);
+                return;
+            }
+
+            var JobID = Steam.steamApps.PICSGetProductInfo(null, message.ID, false, false);
             var callback = await JobID;
 
             if (!callback.Complete)
             {
                 // Retry
-                Produce(queue_cs_packages, payload);
+                Produce(queue_cs_packages, payload, true);
                 return;
             }
 
             foreach (var result in callback.Results)
             {
+                // Send package
                 foreach (var item in result.Packages)
                 {
-                    // Send to Go
-                    payload.PICSPackageInfo = item.Value;
+                    payload.Message = new AppMessage
+                    {
+                        ID = message.ID,
+                        PICSAppInfo = item.Value
+                    };
                     Produce(queue_go_packages, payload);
                 }
 
-                // Unknowns
-                foreach (var entry in result.UnknownApps)
-                {
-                    Log.GoogleInfo("Unknown app: " + entry);
-                    payload.PICSPackageInfo = null;
-                    Produce(queue_go_packages, payload);
-                }
-
+                // Send unknown packages
                 foreach (var entry in result.UnknownPackages)
                 {
                     Log.GoogleInfo("Unknown package: " + entry);
-                    payload.PICSPackageInfo = null;
+
+                    payload.Message = new AppMessage
+                    {
+                        ID = entry,
+                        PICSAppInfo = null
+                    };
                     Produce(queue_go_packages, payload);
                 }
             }
         }
     }
 
-    public abstract class PackageMessage
+    public class PackageMessage
     {
         [JsonProperty(PropertyName = "id")]
         public UInt32 ID;
+
         public PICSProductInfo PICSPackageInfo;
+
+        public static BaseMessage create(UInt32 id, PICSProductInfo pics = null)
+        {
+            return new BaseMessage
+            {
+                Message = new PackageMessage
+                {
+                    ID = id,
+                    PICSPackageInfo = pics
+                }
+            };
+        }
     }
 }

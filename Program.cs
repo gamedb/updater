@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Newtonsoft.Json;
 using Updater.Consumers;
 
 namespace Updater
@@ -8,7 +9,10 @@ namespace Updater
     {
         private static void Main(String[] args)
         {
-            Console.Title = "Steam Updater";
+            Console.Title = "GameDB Updater";
+            
+            // Config
+            Config.init();
 
             // Rollbar
             Log.setupRollbar();
@@ -24,7 +28,7 @@ namespace Updater
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Waiting for Rabbit.. " + ex.Message + " - " + ex.InnerException.Message);
+                    Log.GoogleInfo("Waiting for Rabbit.. " + ex.Message + " - " + ex.InnerException.Message);
                 }
 
                 Thread.Sleep(TimeSpan.FromSeconds(2));

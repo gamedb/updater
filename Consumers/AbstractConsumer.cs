@@ -34,10 +34,10 @@ namespace Updater.Consumers
         //
         private static readonly ConnectionFactory connectionFactory = new ConnectionFactory
         {
-            UserName = Environment.GetEnvironmentVariable("STEAM_RABBIT_USER"),
-            Password = Environment.GetEnvironmentVariable("STEAM_RABBIT_PASS"),
-            HostName = Environment.GetEnvironmentVariable("STEAM_RABBIT_HOST"),
-            Port = Int32.Parse(Environment.GetEnvironmentVariable("STEAM_RABBIT_PORT")),
+            UserName = Config.rabbitUsername,
+            Password = Config.rabbitPassword,
+            HostName = Config.rabbitHostname,
+            Port = Config.rabbitPort,
             RequestedHeartbeat = 10
         };
 
@@ -60,19 +60,29 @@ namespace Updater.Consumers
             }
         }
 
-        public static void Produce(String queue, object message)
+        public static void Produce(String queue, BaseMessage payload, Boolean retry = false)
         {
-            var payload = new BaseMessage
+            if (payload.Attempt == 0)
             {
-                Attempt = 1,
-                FirstSeen = DateTime.Now,
-                OriginalQueue = queue,
-                Message = message
-            };
+                payload.Attempt = 1;
+            }
 
-            var env = Environment.GetEnvironmentVariable("STEAM_ENV");
-            var formatting = env == "local" ? Formatting.Indented : Formatting.None;
+            if (retry)
+            {
+                payload.Attempt++;
+            }
 
+            if (payload.FirstSeen == DateTime.MinValue)
+            {
+                payload.FirstSeen = DateTime.Now;
+            }
+
+            if (String.IsNullOrEmpty(payload.OriginalQueue))
+            {
+                payload.OriginalQueue = queue;
+            }
+
+            var formatting = Config.isLocal() ? Formatting.Indented : Formatting.None;
             var payloadString = JsonConvert.SerializeObject(payload, formatting);
 
             try
@@ -119,7 +129,15 @@ namespace Updater.Consumers
                 }
 
                 // Consume message
-                HandleMessage(msg);
+                try
+                {
+                    HandleMessage(msg);
+                }
+                catch (Exception e)
+                {
+                    Log.GoogleInfo(e + " - " + e.InnerException);
+                    return;
+                }
 
                 channel.BasicAck(msg.DeliveryTag, false);
             };
@@ -159,34 +177,26 @@ namespace Updater.Consumers
 
             return consumerConnection;
         }
-
-        protected async void GetAccessTokens(IEnumerable<UInt32> apps, IEnumerable<UInt32> packages)
-        {
-            var JobID = Steam.steamApps.PICSGetAccessTokens(apps, packages);
-            var callback = await JobID;
-
-            Console.WriteLine(JsonConvert.SerializeObject(callback));
-        }
     }
 
     public class BaseMessage
     {
         [JsonProperty(PropertyName = "message")]
-        public Object Message { get; set; }
-        
+        public Object Message;
+
         [JsonProperty(PropertyName = "first_seen")]
-        public DateTime FirstSeen { get; set; }
-        
+        public DateTime FirstSeen;
+
         [JsonProperty(PropertyName = "attempt")]
-        public Int32 Attempt { get; set; }
-        
+        public Int32 Attempt;
+
         [JsonProperty(PropertyName = "original_queue")]
-        public String OriginalQueue { get; set; }
-        
+        public String OriginalQueue;
+
         [JsonProperty(PropertyName = "max_attempts")]
-        public Int32 MaxAttempts { get; set; }
-        
+        public Int32 MaxAttempts;
+
         [JsonProperty(PropertyName = "max_time")]
-        public Int32 MaxTime { get; set; }
+        public Int32 MaxTime;
     }
 }

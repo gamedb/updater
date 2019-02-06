@@ -1,27 +1,27 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
 using SteamKit2;
-using SteamWebAPI2.Utilities;
 using Updater.Consumers;
+using static SteamKit2.SteamApps;
+using Exception = System.Exception;
 
 namespace Updater
 {
     public static class Steam
     {
-        private const String LastChangeFile = "last-changenumber.txt";
+        public const String LastChangeFile = "last-changenumber.txt";
 
         public static Boolean quitOnDisconnect;
-        private static UInt32 previousChangeNumber;
+        public static UInt32 previousChangeNumber;
         public static Boolean isLoggedOn;
 
         public static SteamClient steamClient;
-        private static CallbackManager manager;
+        public static CallbackManager manager;
 
-        private static System.Timers.Timer timer1;
-        private static System.Timers.Timer timer2;
+        public static System.Timers.Timer timer1;
+        public static System.Timers.Timer timer2;
 
         public static SteamUser steamUser;
         public static SteamApps steamApps;
@@ -29,8 +29,6 @@ namespace Updater
 
         public static void startSteam(Boolean debug)
         {
-            var env = Environment.GetEnvironmentVariable("STEAM_ENV");
-            
             // Debug
             DebugLog.AddListener(new DebugListener());
             DebugLog.Enabled = debug;
@@ -53,12 +51,12 @@ namespace Updater
 
             timer1 = new System.Timers.Timer();
             timer1.Elapsed += RunWaitCallbacks;
-            timer1.Interval = TimeSpan.FromSeconds(env == "local" ? 1 : 10).TotalMilliseconds;
+            timer1.Interval = TimeSpan.FromSeconds(Config.isLocal() ? 1 : 10).TotalMilliseconds;
             timer1.Start();
 
             timer2 = new System.Timers.Timer();
             timer2.Elapsed += CheckForChanges;
-            timer2.Interval = TimeSpan.FromSeconds(env == "local" ? 5 : 60).TotalMilliseconds;
+            timer2.Interval = TimeSpan.FromSeconds(Config.isLocal() ? 5 : 60).TotalMilliseconds;
             timer2.Start();
         }
 
@@ -103,28 +101,22 @@ namespace Updater
                         );
 
                         // Save apps
-                        var AppMessageIn = new AppMessage
+                        foreach (var appID in callback.AppChanges.Keys)
                         {
-                            IDs = callback.AppChanges.Keys.ToArray(),
-                            Time = DateTime.Now.ToUnixTimeStamp()
-                        };
-                        AbstractConsumer.Produce(AbstractConsumer.queueApps, JsonConvert.SerializeObject(AppMessageIn));
+                            var appPayload = AppMessage.create(appID);
+                            AbstractConsumer.Produce(AbstractConsumer.queue_cs_apps, appPayload);
+                        }
 
                         // Save packages
-                        var PackageMessageIn = new PackageMessageIn
+                        foreach (var packageID in callback.PackageChanges.Keys)
                         {
-                            IDs = callback.PackageChanges.Keys.ToArray(),
-                            Time = DateTime.Now.ToUnixTimeStamp()
-                        };
-                        AbstractConsumer.Produce(AbstractConsumer.queuePackages, JsonConvert.SerializeObject(PackageMessageIn));
+                            var packagePayload = PackageMessage.create(packageID);
+                            AbstractConsumer.Produce(AbstractConsumer.queue_cs_packages, packagePayload);
+                        }
 
                         // Save changes
-                        var changeMessageOut = new ChangeMessageOut
-                        {
-                            PICSChanges = callback,
-                            Time = DateTime.Now.ToUnixTimeStamp()
-                        };
-                        AbstractConsumer.Produce(AbstractConsumer.queueChangesData, JsonConvert.SerializeObject(changeMessageOut));
+                        var changePayload = ChangeMessage.create(callback.CurrentChangeNumber, callback);
+                        AbstractConsumer.Produce(AbstractConsumer.queue_go_changes, changePayload);
 
                         // Update change number
                         previousChangeNumber = callback.CurrentChangeNumber;
@@ -147,8 +139,8 @@ namespace Updater
             Log.GoogleInfo("Connected to Steam");
             steamUser.LogOn(new SteamUser.LogOnDetails
             {
-                Username = Environment.GetEnvironmentVariable("STEAM_PROXY_USERNAME"),
-                Password = Environment.GetEnvironmentVariable("STEAM_PROXY_PASSWORD"),
+                Username = Config.steamUsername,
+                Password = Config.steamPassword
             });
         }
 
@@ -211,9 +203,23 @@ namespace Updater
         }
     }
 
-    public class ChangeMessageOut
+    public class ChangeMessage
     {
-        public SteamApps.PICSChangesCallback PICSChanges { get; set; }
-        public UInt64 Time { get; set; }
+        [JsonProperty(PropertyName = "id")]
+        public UInt32 ID;
+
+        public PICSChangesCallback PICSChanges;
+
+        public static BaseMessage create(UInt32 id, PICSChangesCallback pics = null)
+        {
+            return new BaseMessage
+            {
+                Message = new ChangeMessage
+                {
+                    ID = id,
+                    PICSChanges = pics
+                }
+            };
+        }
     }
 }
