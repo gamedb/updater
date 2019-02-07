@@ -29,7 +29,7 @@ namespace Updater.Consumers
             // Remove any keys that can't be deserialised
             var json = JObject.Parse(payload.Message.ToString());
             json.Property("PICSPackageInfo").Remove();
-            
+
             // Get the message in the payload
             PackageMessage message;
             try
@@ -88,14 +88,13 @@ namespace Updater.Consumers
 
         public PICSProductInfo PICSPackageInfo;
 
-        public static BaseMessage create(UInt32 id, PICSProductInfo pics = null)
+        public static BaseMessage create(UInt32 id)
         {
             return new BaseMessage
             {
                 Message = new PackageMessage
                 {
-                    ID = id,
-                    PICSPackageInfo = pics
+                    ID = id
                 }
             };
         }

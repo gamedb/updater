@@ -88,14 +88,13 @@ namespace Updater.Consumers
 
         public PICSProductInfo PICSAppInfo;
 
-        public static BaseMessage create(UInt32 id, PICSProductInfo pics = null)
+        public static BaseMessage create(UInt32 id)
         {
             return new BaseMessage
             {
                 Message = new AppMessage
                 {
-                    ID = id,
-                    PICSAppInfo = pics
+                    ID = id
                 }
             };
         }
