@@ -2,6 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RabbitMQ.Client.Events;
 using static SteamKit2.SteamApps.PICSProductInfoCallback;
 
@@ -19,21 +20,25 @@ namespace Updater.Consumers
             {
                 payload = JsonConvert.DeserializeObject<BaseMessage>(msgBody);
             }
-            catch (JsonSerializationException)
+            catch (JsonSerializationException e)
             {
-                Log.GoogleInfo("Unable to deserialize package: " + msgBody);
+                Log.GoogleInfo("Unable to deserialize package: " + e + " - " + e.InnerException + " - " + msgBody);
                 return;
             }
 
+            // Remove any keys that can't be deserialised
+            var json = JObject.Parse(payload.Message.ToString());
+            json.Property("PICSPackageInfo").Remove();
+            
             // Get the message in the payload
             PackageMessage message;
             try
             {
-                message = JsonConvert.DeserializeObject<PackageMessage>(payload.Message.ToString());
+                message = JsonConvert.DeserializeObject<PackageMessage>(json.ToString());
             }
-            catch (Exception)
+            catch (JsonSerializationException e)
             {
-                Log.GoogleInfo("Unable to deserialize app message: " + payload.Message);
+                Log.GoogleInfo("Unable to deserialize package message: " + e + " - " + e.InnerException + " - " + json);
                 return;
             }
 

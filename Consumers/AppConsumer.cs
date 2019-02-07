@@ -2,6 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RabbitMQ.Client.Events;
 using static SteamKit2.SteamApps.PICSProductInfoCallback;
 
@@ -19,21 +20,25 @@ namespace Updater.Consumers
             {
                 payload = JsonConvert.DeserializeObject<BaseMessage>(msgBody);
             }
-            catch (JsonSerializationException)
+            catch (JsonSerializationException e)
             {
-                Log.GoogleInfo("Unable to deserialize app: " + msgBody);
+                Log.GoogleInfo("Unable to deserialize app: " + e + " - " + e.InnerException + " - " + msgBody);
                 return;
             }
+
+            // Remove any keys that can't be deserialised
+            var json = JObject.Parse(payload.Message.ToString());
+            json.Property("PICSAppInfo").Remove();
 
             // Get the message in the payload
             AppMessage message;
             try
             {
-                message = JsonConvert.DeserializeObject<AppMessage>(payload.Message.ToString());
+                message = JsonConvert.DeserializeObject<AppMessage>(json.ToString());
             }
-            catch (Exception)
+            catch (JsonSerializationException e)
             {
-                Log.GoogleInfo("Unable to deserialize app message: " + payload.Message);
+                Log.GoogleInfo("Unable to deserialize app message: " + e + " - " + e.InnerException + " - " + json);
                 return;
             }
 
@@ -57,7 +62,6 @@ namespace Updater.Consumers
                         ID = message.ID,
                         PICSAppInfo = item.Value
                     };
-
                     Produce(queue_go_apps, payload);
                 }
 
@@ -71,7 +75,6 @@ namespace Updater.Consumers
                         ID = entry,
                         PICSAppInfo = null
                     };
-
                     Produce(queue_go_apps, payload);
                 }
             }
