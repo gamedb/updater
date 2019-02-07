@@ -192,11 +192,5 @@ namespace Updater.Consumers
 
         [JsonProperty(PropertyName = "original_queue")]
         public String OriginalQueue;
-
-        [JsonProperty(PropertyName = "max_attempts")]
-        public Int32 MaxAttempts;
-
-        [JsonProperty(PropertyName = "max_time")]
-        public Int32 MaxTime;
     }
 }
