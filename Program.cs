@@ -10,7 +10,7 @@ namespace Updater
         private static void Main(String[] args)
         {
             Console.Title = "GameDB Updater";
-            
+
             // Config
             Config.init();
 
@@ -31,11 +31,22 @@ namespace Updater
                     Log.GoogleInfo("Waiting for Rabbit.. " + ex.Message + " - " + ex.InnerException.Message);
                 }
 
-                Thread.Sleep(TimeSpan.FromSeconds(2));
+                Thread.Sleep(TimeSpan.FromSeconds(1));
             }
 
             // Poll for new changes
             Steam.startSteam(false);
+            while (true)
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+
+                if (Steam.steamClient.IsConnected && Steam.isLoggedOn)
+                {
+                    break;
+                }
+
+                Log.GoogleInfo("Waiting for Steam.. ");
+            }
 
             // Consumers
             AbstractConsumer.startConsumers();
