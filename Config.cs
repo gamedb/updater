@@ -18,6 +18,7 @@ namespace Updater
         public static String googleProject;
         public static String environment;
         public static String rollbarKey;
+        public static String slackWebhook;
 
         public static void init()
         {
@@ -35,6 +36,7 @@ namespace Updater
             googleProject = Environment.GetEnvironmentVariable("STEAM_GOOGLE_PROJECT");
             environment = Environment.GetEnvironmentVariable("STEAM_ENV");
             rollbarKey = Environment.GetEnvironmentVariable("STEAM_PROXY_ROLLBAR_PRIVATE");
+            slackWebhook = Environment.GetEnvironmentVariable("STEAM_PROXY_SLACK_WEBHOOK");
         }
 
         public static Boolean isLocal()

@@ -19,9 +19,10 @@ namespace Updater.Consumers
         public const String queue_cs_profiles = "GameDB_CS_Profiles";
 
         public const String queue_go_apps = "GameDB_Go_Apps";
+        public const String queue_go_changes = "GameDB_Go_Changes";
+        public const String queue_go_delays = "GameDB_Go_Delays";
         public const String queue_go_packages = "GameDB_Go_Packages";
         public const String queue_go_profiles = "GameDB_Go_Profiles";
-        public const String queue_go_changes = "GameDB_Go_Changes";
 
         // Queue -> Consumer
         public static readonly Dictionary<String, AbstractConsumer> consumers = new Dictionary<String, AbstractConsumer>
@@ -42,11 +43,13 @@ namespace Updater.Consumers
         };
 
         // Abstract
-        protected abstract Task HandleMessage(BasicDeliverEventArgs msg);
+        protected abstract Task HandleMessage(BaseMessage payload);
 
         // Statics
         public static void startConsumers()
         {
+            Log.GoogleInfo("Loading consumers");
+
             foreach (var (key, consumer) in consumers)
             {
                 var thread = new Thread(() =>
@@ -60,26 +63,18 @@ namespace Updater.Consumers
             }
         }
 
-        public static void Produce(String queue, BaseMessage payload, Boolean retry = false)
+        public static void Produce(String queue, BaseMessage payload)
         {
+            payload.OriginalQueue = queue;
+
             if (payload.Attempt == 0)
             {
                 payload.Attempt = 1;
             }
 
-            if (retry)
-            {
-                payload.Attempt++;
-            }
-
             if (payload.FirstSeen == DateTime.MinValue)
             {
                 payload.FirstSeen = DateTime.Now;
-            }
-
-            if (String.IsNullOrEmpty(payload.OriginalQueue))
-            {
-                payload.OriginalQueue = queue;
             }
 
             var formatting = Config.isLocal() ? Formatting.Indented : Formatting.None;
@@ -108,38 +103,50 @@ namespace Updater.Consumers
 
         private void Consume(String queue)
         {
-            Log.GoogleInfo("Consuming " + queue);
-
             var connection = getConsumerConnection();
             var channel = connection.CreateModel();
-            channel.BasicQos(0, 10, false);
 
+            channel.BasicQos(0, 10, false);
             channel.QueueDeclare(queue, true, false, false);
 
             var consumer = new EventingBasicConsumer(channel);
+            var payload = new BaseMessage();
+
             consumer.Received += delegate(Object chan, BasicDeliverEventArgs msg)
             {
+                var msgBody = Encoding.UTF8.GetString(msg.Body);
+
+                // Make a message object
+                try
+                {
+                    payload = JsonConvert.DeserializeObject<BaseMessage>(msgBody);
+                }
+                catch (Exception e)
+                {
+                    Log.GoogleInfo("Unable to deserialize message body: " + e + " - " + e.InnerException + " - " + msgBody);
+                    payload.ack(channel, msg);
+                    return;
+                }
+
                 // Check logged in to Steam
                 if (!Steam.steamClient.IsConnected || !Steam.isLoggedOn)
                 {
                     Thread.Sleep(TimeSpan.FromSeconds(1));
                     Log.GoogleInfo("Waiting to login before consuming");
-                    channel.BasicNack(msg.DeliveryTag, false, true);
+                    payload.ackRetry(channel, msg);
                     return;
                 }
 
                 // Consume message
-                try
+                var task = HandleMessage(payload);
+                if (task.Exception != null)
                 {
-                    HandleMessage(msg);
-                }
-                catch (Exception e)
-                {
-                    Log.GoogleInfo(e + " - " + e.InnerException);
+                    Log.GoogleInfo(task.Exception + " - " + task.Exception.InnerException);
+                    payload.ackRetry(channel, msg);
                     return;
                 }
 
-                channel.BasicAck(msg.DeliveryTag, false);
+                payload.ack(channel, msg);
             };
 
             channel.BasicConsume(queue, false, consumer);
@@ -192,5 +199,20 @@ namespace Updater.Consumers
 
         [JsonProperty(PropertyName = "original_queue")]
         public String OriginalQueue;
+
+        public void ack(IModel channel, BasicDeliverEventArgs msg)
+        {
+            channel.BasicAck(msg.DeliveryTag, false);
+        }
+
+        public void ackRetry(IModel channel, BasicDeliverEventArgs msg)
+        {
+            Attempt++;
+            Log.GoogleInfo("Adding to delay queue");
+
+            AbstractConsumer.Produce(AbstractConsumer.queue_go_delays, this);
+
+            channel.BasicAck(msg.DeliveryTag, false);
+        }
     }
 }

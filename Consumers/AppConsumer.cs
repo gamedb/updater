@@ -1,55 +1,29 @@
 ﻿using System;
-using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using RabbitMQ.Client.Events;
 using static SteamKit2.SteamApps.PICSProductInfoCallback;
 
 namespace Updater.Consumers
 {
     public class AppConsumer : AbstractConsumer
     {
-        protected override async Task HandleMessage(BasicDeliverEventArgs msg)
+        protected override async Task HandleMessage(BaseMessage payload)
         {
-            var msgBody = Encoding.UTF8.GetString(msg.Body);
-
-            // Get the full payload
-            BaseMessage payload;
-            try
-            {
-                payload = JsonConvert.DeserializeObject<BaseMessage>(msgBody);
-            }
-            catch (JsonSerializationException e)
-            {
-                Log.GoogleInfo("Unable to deserialize app: " + e + " - " + e.InnerException + " - " + msgBody);
-                return;
-            }
-
             // Remove any keys that can't be deserialised
             var json = JObject.Parse(payload.Message.ToString());
-            json.Property("PICSAppInfo").Remove();
+            var key = json.Property("PICSAppInfo");
+            key?.Remove();
 
             // Get the message in the payload
-            AppMessage message;
-            try
-            {
-                message = JsonConvert.DeserializeObject<AppMessage>(json.ToString());
-            }
-            catch (JsonSerializationException e)
-            {
-                Log.GoogleInfo("Unable to deserialize app message: " + e + " - " + e.InnerException + " - " + json);
-                return;
-            }
+            var message = JsonConvert.DeserializeObject<AppMessage>(json.ToString());
 
             var JobID = Steam.steamApps.PICSGetProductInfo(message.ID, null, false, false);
             var callback = await JobID;
 
             if (!callback.Complete)
             {
-                // Retry
-                Produce(queue_cs_apps, payload, true);
-                return;
+                throw new Exception("Callback not complete");
             }
 
             foreach (var result in callback.Results)
@@ -86,6 +60,7 @@ namespace Updater.Consumers
         [JsonProperty(PropertyName = "id")]
         public UInt32 ID;
 
+        // ReSharper disable once NotAccessedField.Global
         public PICSProductInfo PICSAppInfo;
 
         public static BaseMessage create(UInt32 id)
