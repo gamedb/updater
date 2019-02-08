@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using SteamKit2;
 using Updater.Consumers;
@@ -26,6 +30,8 @@ namespace Updater
         public static SteamUser steamUser;
         public static SteamApps steamApps;
         public static SteamFriends steamFriends;
+
+        private static readonly HttpClient httpClient = new HttpClient();
 
         public static void startSteam(Boolean debug)
         {
@@ -99,6 +105,20 @@ namespace Updater
                                 DateTime.Now
                             )
                         );
+
+                        // Slack
+                        var total = callback.AppChanges.Count + callback.PackageChanges.Count;
+                        if (total >= 100)
+                        {
+                            try
+                            {
+                                await slack(total + " products queued");
+                            }
+                            catch (Exception e)
+                            {
+                                Log.GoogleInfo(e.ToString());
+                            }
+                        }
 
                         // Save apps
                         foreach (var appID in callback.AppChanges.Keys)
@@ -188,6 +208,18 @@ namespace Updater
                 steamClient.Disconnect();
             }
         }
+
+        private static async Task<String> slack(String text)
+        {
+            var values = new Dictionary<String, String>
+            {
+                {"text", text}
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(values), Encoding.UTF8, "application/json");
+            var response = await httpClient.PostAsync(Config.slackWebhook, content);
+            return await response.Content.ReadAsStringAsync();
+        }
     }
 
     internal class DebugListener : IDebugListener
@@ -208,6 +240,7 @@ namespace Updater
         [JsonProperty(PropertyName = "id")]
         public UInt32 ID;
 
+        // ReSharper disable once NotAccessedField.Global
         public PICSChangesCallback PICSChanges;
 
         public static BaseMessage create(UInt32 id, PICSChangesCallback pics = null)
