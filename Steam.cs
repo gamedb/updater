@@ -95,7 +95,7 @@ namespace Updater
                     if (previousChangeNumber < callback.CurrentChangeNumber)
                     {
                         Log.Info(
-                            $"Change {callback.LastChangeNumber:N0} - {callback.CurrentChangeNumber:N0} ({callback.CurrentChangeNumber - callback.LastChangeNumber:N0} changes) {callback.AppChanges.Count} apps, {callback.PackageChanges.Count} packages"
+                            $"{callback.CurrentChangeNumber - callback.LastChangeNumber:N0} changes, {callback.AppChanges.Count} apps, {callback.PackageChanges.Count} packages"
                         );
 
                         // Slack
