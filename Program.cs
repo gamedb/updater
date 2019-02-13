@@ -14,9 +14,6 @@ namespace Updater
             // Config
             Config.init();
 
-            // Rollbar
-            Log.setupRollbar();
-
             // Wait for Rabbit
             while (true)
             {
@@ -28,7 +25,7 @@ namespace Updater
                 }
                 catch (Exception ex)
                 {
-                    Log.GoogleInfo("Waiting for Rabbit.. " + ex.Message + " - " + ex.InnerException.Message);
+                    Log.Error("Waiting for Rabbit.. " + ex.Message + " - " + ex.InnerException.Message);
                 }
 
                 Thread.Sleep(TimeSpan.FromSeconds(1));
@@ -45,7 +42,7 @@ namespace Updater
                     break;
                 }
 
-                Log.GoogleInfo("Waiting for Steam.. ");
+                Log.Info("Waiting for Steam.. ");
             }
 
             // Consumers

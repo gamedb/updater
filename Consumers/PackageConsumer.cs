@@ -42,8 +42,6 @@ namespace Updater.Consumers
                 // Send unknown packages
                 foreach (var entry in result.UnknownPackages)
                 {
-                    Log.GoogleInfo("Unknown package: " + entry);
-
                     payload.Message = new AppMessage
                     {
                         ID = entry,

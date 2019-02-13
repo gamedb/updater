@@ -42,8 +42,6 @@ namespace Updater.Consumers
                 // Send unknown apps
                 foreach (var entry in result.UnknownApps)
                 {
-                    Log.GoogleInfo("Unknown app: " + entry);
-
                     payload.Message = new AppMessage
                     {
                         ID = entry,

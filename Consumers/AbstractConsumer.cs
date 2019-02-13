@@ -48,7 +48,7 @@ namespace Updater.Consumers
         // Statics
         public static void startConsumers()
         {
-            Log.GoogleInfo("Loading consumers");
+            Log.Info("Loading consumers");
 
             foreach (var (key, consumer) in consumers)
             {
@@ -97,7 +97,7 @@ namespace Updater.Consumers
             }
             catch (Exception ex)
             {
-                Log.RollbarError("Failed producing to " + queue + " with data: " + payloadString + " - " + ex.Message);
+                Log.Error("Failed producing to " + queue + " with data: " + payloadString + " - " + ex.Message);
             }
         }
 
@@ -123,7 +123,7 @@ namespace Updater.Consumers
                 }
                 catch (Exception e)
                 {
-                    Log.GoogleInfo("Unable to deserialize message body: " + e + " - " + e.InnerException + " - " + msgBody);
+                    Log.Error("Unable to deserialize message body: " + e + " - " + e.InnerException + " - " + msgBody);
                     payload.ack(channel, msg);
                     return;
                 }
@@ -132,7 +132,7 @@ namespace Updater.Consumers
                 if (!Steam.steamClient.IsConnected || !Steam.isLoggedOn)
                 {
                     Thread.Sleep(TimeSpan.FromSeconds(1));
-                    Log.GoogleInfo("Waiting to login before consuming");
+                    Log.Info("Waiting to login before consuming");
                     payload.ackRetry(channel, msg);
                     return;
                 }
@@ -141,7 +141,7 @@ namespace Updater.Consumers
                 var task = HandleMessage(payload);
                 if (task.Exception != null)
                 {
-                    Log.GoogleInfo(task.Exception + " - " + task.Exception.InnerException);
+                    Log.Error(task.Exception + " - " + task.Exception.InnerException);
                     payload.ackRetry(channel, msg);
                     return;
                 }
@@ -208,7 +208,7 @@ namespace Updater.Consumers
         public void ackRetry(IModel channel, BasicDeliverEventArgs msg)
         {
             Attempt++;
-            Log.GoogleInfo("Adding to delay queue");
+            Log.Info("Adding to delay queue");
 
             AbstractConsumer.Produce(AbstractConsumer.queue_go_delays, this);
 

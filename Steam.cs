@@ -94,16 +94,8 @@ namespace Updater
 
                     if (previousChangeNumber < callback.CurrentChangeNumber)
                     {
-                        Log.GoogleInfo(
-                            String.Format(
-                                "{5:hh:mm:ss} Change {0:N0} - {1:N0} ({2:N0} changes) {3} apps, {4} packages",
-                                callback.LastChangeNumber,
-                                callback.CurrentChangeNumber,
-                                callback.CurrentChangeNumber - callback.LastChangeNumber,
-                                callback.AppChanges.Count,
-                                callback.PackageChanges.Count,
-                                DateTime.Now
-                            )
+                        Log.Info(
+                            $"Change {callback.LastChangeNumber:N0} - {callback.CurrentChangeNumber:N0} ({callback.CurrentChangeNumber - callback.LastChangeNumber:N0} changes) {callback.AppChanges.Count} apps, {callback.PackageChanges.Count} packages"
                         );
 
                         // Slack
@@ -118,7 +110,7 @@ namespace Updater
                                 }
                                 catch (Exception e)
                                 {
-                                    Log.GoogleInfo(e.ToString());
+                                    Log.Error(e.ToString());
                                 }
                             }
                         }
@@ -149,7 +141,7 @@ namespace Updater
             }
             catch (Exception ex)
             {
-                Log.RollbarError("Failed checking for changes - " + ex.Message);
+                Log.Error("Failed checking for changes - " + ex.Message);
             }
             finally
             {
@@ -159,7 +151,7 @@ namespace Updater
 
         private static void OnConnected(SteamClient.ConnectedCallback callback)
         {
-            Log.GoogleInfo("Connected to Steam");
+            Log.Info("Connected to Steam");
             steamUser.LogOn(new SteamUser.LogOnDetails
             {
                 Username = Config.steamUsername,
@@ -169,7 +161,7 @@ namespace Updater
 
         private static void OnDisconnected(SteamClient.DisconnectedCallback callback)
         {
-            Log.GoogleInfo("Disconnected from Steam");
+            Log.Info("Disconnected from Steam");
             isLoggedOn = false;
 
             if (quitOnDisconnect)
@@ -186,24 +178,17 @@ namespace Updater
         {
             if (callback.Result != EResult.OK)
             {
-                Log.GoogleInfo(
-                    String.Format(
-                        "{2:hh:mm:ss} Unable to logon to Steam: {0} / {1}",
-                        callback.Result,
-                        callback.ExtendedResult,
-                        DateTime.Now
-                    )
-                );
+                Log.Error($"Unable to logon to Steam: {callback.Result} / {callback.ExtendedResult}");
                 return;
             }
 
-            Log.GoogleInfo("Logged in");
+            Log.Info("Logged in");
             isLoggedOn = true;
         }
 
         private static void OnLoggedOff(SteamUser.LoggedOffCallback callback)
         {
-            Log.GoogleInfo("Logged off");
+            Log.Info("Logged off");
             isLoggedOn = false;
 
             if (quitOnDisconnect)
@@ -229,12 +214,7 @@ namespace Updater
     {
         public void WriteLine(String category, String msg)
         {
-            Log.GoogleInfo(String.Format(
-                "{2:hh:mm:ss} Debug - {0}: {1}",
-                category,
-                msg,
-                DateTime.Now
-            ));
+            Log.Debug($"Debug - {category}: {msg}");
         }
     }
 
