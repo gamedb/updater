@@ -39,6 +39,8 @@ namespace Updater
                 TextPayload = message
             };
 
+            logEntry.Labels.Add("env", Config.environment);
+
             googleCLient.WriteLogEntries(LogNameOneof.From(logName), resource, null, new[] {logEntry});
         }
     }
