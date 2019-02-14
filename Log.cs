@@ -24,9 +24,14 @@ namespace Updater
             log(message, LogSeverity.Error);
         }
 
+        public static void Critical(String message)
+        {
+            log(message, LogSeverity.Critical);
+        }
+
         private static void log(String message, LogSeverity severity)
         {
-            message = $"{DateTime.Now:hh:mm:ss} - {severity} - {message}";
+            message = $"{DateTime.Now:yyyy:MM:dd HH:mm:ss} - {severity} - {message}";
 
             Console.WriteLine(message);
 
