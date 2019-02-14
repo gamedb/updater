@@ -15,21 +15,7 @@ namespace Updater
             Config.init();
 
             // Wait for Rabbit
-            while (true)
-            {
-                try
-                {
-                    AbstractConsumer.getProducerConnection();
-                    AbstractConsumer.getConsumerConnection();
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("Waiting for Rabbit.. " + ex.Message + " - " + ex.InnerException.Message);
-                }
-
-                Thread.Sleep(TimeSpan.FromSeconds(1));
-            }
+            AbstractConsumer.waitForConnections();
 
             // Poll for new changes
             Steam.startSteam(false);

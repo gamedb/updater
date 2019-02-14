@@ -82,6 +82,8 @@ namespace Updater.Consumers
 
             try
             {
+                waitForConnections();
+
                 var connection = getProducerConnection();
                 var channel = connection.CreateModel();
 
@@ -103,6 +105,8 @@ namespace Updater.Consumers
 
         private void Consume(String queue)
         {
+            waitForConnections();
+
             var connection = getConsumerConnection();
             var channel = connection.CreateModel();
 
@@ -160,9 +164,12 @@ namespace Updater.Consumers
 
                 producerConnection.ConnectionShutdown += (s, e) =>
                 {
+                    Log.Error("Producer connection lost");
+
                     producerConnection.Dispose();
                     producerConnection = null;
-                    throw new Exception("Producer connection lost");
+
+                    waitForConnections();
                 };
             }
 
@@ -177,12 +184,39 @@ namespace Updater.Consumers
 
                 consumerConnection.ConnectionShutdown += (s, e) =>
                 {
+                    Log.Error("Consumer connection lost");
+
                     consumerConnection.Dispose();
                     consumerConnection = null;
+
+                    waitForConnections();
                 };
             }
 
             return consumerConnection;
+        }
+
+        public static void waitForConnections()
+        {
+            var count = 0;
+
+            while (true)
+            {
+                count++;
+
+                try
+                {
+                    getProducerConnection();
+                    getConsumerConnection();
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Waiting for Rabbit (" + count + ") " + ex.Message + " - " + ex.InnerException.Message);
+                }
+
+                Thread.Sleep(TimeSpan.FromSeconds(5));
+            }
         }
     }
 
