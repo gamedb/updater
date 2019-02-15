@@ -35,7 +35,6 @@ namespace Updater
             // Other
             googleProject = Environment.GetEnvironmentVariable("STEAM_GOOGLE_PROJECT");
             environment = Environment.GetEnvironmentVariable("STEAM_ENV");
-            rollbarKey = Environment.GetEnvironmentVariable("STEAM_PROXY_ROLLBAR_PRIVATE");
             slackWebhook = Environment.GetEnvironmentVariable("STEAM_PROXY_SLACK_WEBHOOK");
         }
 
