@@ -11,7 +11,7 @@ namespace Updater.Consumers
         protected override async Task HandleMessage(BaseMessage payload)
         {
             // Remove any keys that can't be deserialised
-            var json = JObject.Parse(payload.Message.ToString());
+            var json = JObject.Parse(JsonConvert.SerializeObject(payload));
             var key = json.Property("PICSAppInfo");
             key?.Remove();
 
