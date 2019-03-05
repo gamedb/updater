@@ -9,6 +9,7 @@ RUN dotnet publish -c Release -o out
 FROM microsoft/dotnet:2.2-runtime-alpine
 WORKDIR /root
 COPY --from=build-env /root/out .
+COPY ./health-check.sh .
 RUN apk update && apk add libc6-compat
 RUN touch google-auth.json && touch last-changenumber.txt
 ENTRYPOINT ["dotnet", "Updater.dll"]
