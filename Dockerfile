@@ -12,3 +12,4 @@ COPY --from=build-env /root/out .
 RUN apk update && apk add libc6-compat
 RUN touch google-auth.json && touch last-changenumber.txt
 ENTRYPOINT ["dotnet", "Updater.dll"]
+HEALTHCHECK --interval=1m --timeout=5s --start-period=2m --retries=2 CMD ./health-check.sh
