@@ -101,12 +101,23 @@ namespace Updater
                         // Slack
                         if (!Config.isLocal())
                         {
-                            var total = callback.AppChanges.Count + callback.PackageChanges.Count;
-                            if (total >= 100)
+                            if (callback.AppChanges.Count >= 100)
                             {
                                 try
                                 {
-                                    await slack(total + " products queued");
+                                    await slack(callback.AppChanges.Count + " apps queued");
+                                }
+                                catch (Exception e)
+                                {
+                                    Log.Error(e.ToString());
+                                }
+                            }
+
+                            if (callback.PackageChanges.Count >= 100)
+                            {
+                                try
+                                {
+                                    await slack(callback.PackageChanges.Count + " packages queued");
                                 }
                                 catch (Exception e)
                                 {
