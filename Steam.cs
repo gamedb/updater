@@ -98,34 +98,6 @@ namespace Updater
                             $"{callback.CurrentChangeNumber - callback.LastChangeNumber:N0} changes, {callback.AppChanges.Count} apps, {callback.PackageChanges.Count} packages"
                         );
 
-                        // Slack
-                        if (!Config.isLocal())
-                        {
-                            if (callback.AppChanges.Count >= 100)
-                            {
-                                try
-                                {
-                                    await slack(callback.AppChanges.Count + " apps queued");
-                                }
-                                catch (Exception e)
-                                {
-                                    Log.Error(e.ToString());
-                                }
-                            }
-
-                            if (callback.PackageChanges.Count >= 100)
-                            {
-                                try
-                                {
-                                    await slack(callback.PackageChanges.Count + " packages queued");
-                                }
-                                catch (Exception e)
-                                {
-                                    Log.Error(e.ToString());
-                                }
-                            }
-                        }
-
                         // Save apps
                         foreach (var appID in callback.AppChanges.Keys)
                         {
@@ -206,18 +178,6 @@ namespace Updater
             {
                 steamClient.Disconnect();
             }
-        }
-
-        private static async Task<String> slack(String text)
-        {
-            var values = new Dictionary<String, String>
-            {
-                {"text", text}
-            };
-
-            var content = new StringContent(JsonConvert.SerializeObject(values), Encoding.UTF8, "application/json");
-            var response = await httpClient.PostAsync(Config.slackWebhook, content);
-            return await response.Content.ReadAsStringAsync();
         }
     }
 
