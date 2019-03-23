@@ -33,7 +33,7 @@ namespace Updater
 
         private static readonly HttpClient httpClient = new HttpClient();
 
-        public static void startSteam(Boolean debug)
+        public static void startSteam(Boolean checkChanges, Boolean debug)
         {
             // Debug
             DebugLog.AddListener(new DebugListener());
@@ -60,10 +60,13 @@ namespace Updater
             timer1.Interval = TimeSpan.FromSeconds(Config.isLocal() ? 1 : 10).TotalMilliseconds;
             timer1.Start();
 
-            timer2 = new System.Timers.Timer();
-            timer2.Elapsed += CheckForChanges;
-            timer2.Interval = TimeSpan.FromSeconds(Config.isLocal() ? 5 : 60).TotalMilliseconds;
-            timer2.Start();
+            if (checkChanges)
+            {
+                timer2 = new System.Timers.Timer();
+                timer2.Elapsed += CheckForChanges;
+                timer2.Interval = TimeSpan.FromSeconds(Config.isLocal() ? 5 : 60).TotalMilliseconds;
+                timer2.Start();
+            }
         }
 
         private static void RunWaitCallbacks(Object obj, EventArgs args)

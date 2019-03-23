@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
 using Updater.Consumers;
 
 namespace Updater
@@ -18,7 +18,7 @@ namespace Updater
             AbstractConsumer.waitForConnections();
 
             // Poll for new changes
-            Steam.startSteam(false);
+            Steam.startSteam(!args.Contains("--nopics"), false);
             while (true)
             {
                 Thread.Sleep(TimeSpan.FromSeconds(1));
