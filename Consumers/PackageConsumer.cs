@@ -31,10 +31,10 @@ namespace Updater.Consumers
                 // Send package
                 foreach (var item in result.Packages)
                 {
-                    payload.Message = new AppMessage
+                    payload.Message = new PackageMessage
                     {
                         ID = message.ID,
-                        PICSAppInfo = item.Value
+                        PICSPackageInfo = item.Value
                     };
                     Produce(queue_go_packages, payload);
                 }
@@ -42,10 +42,10 @@ namespace Updater.Consumers
                 // Send unknown packages
                 foreach (var entry in result.UnknownPackages)
                 {
-                    payload.Message = new AppMessage
+                    payload.Message = new PackageMessage
                     {
                         ID = entry,
-                        PICSAppInfo = null
+                        PICSPackageInfo = null
                     };
                     Produce(queue_go_packages, payload);
                 }
@@ -58,7 +58,6 @@ namespace Updater.Consumers
         [JsonProperty(PropertyName = "id")]
         public UInt32 ID;
 
-        
         // ReSharper disable once UnusedMember.Global
         public PICSProductInfo PICSPackageInfo;
 
