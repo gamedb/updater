@@ -65,16 +65,19 @@ namespace Updater.Consumers
 
         public static void Produce(String queue, BaseMessage payload)
         {
-            payload.OriginalQueue = queue;
-
-            if (payload.Attempt == 0)
+            if (queue == "")
             {
-                payload.Attempt = 1;
+                payload.OriginalQueue = queue;
             }
 
             if (payload.FirstSeen == DateTime.MinValue)
             {
                 payload.FirstSeen = DateTime.Now;
+            }
+
+            if (payload.Attempt == 0)
+            {
+                payload.Attempt = 1;
             }
 
             var formatting = Config.isLocal() ? Formatting.Indented : Formatting.None;
