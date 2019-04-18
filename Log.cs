@@ -35,18 +35,21 @@ namespace Updater
 
             Console.WriteLine(message);
 
-            var logName = new LogName(Config.googleProject, Config.environment + "-updater");
-            var resource = new MonitoredResource {Type = "project"};
-            var logEntry = new LogEntry
+            if (!Config.isLocal())
             {
-                LogName = logName.ToString(),
-                Severity = severity,
-                TextPayload = message
-            };
+                var logName = new LogName(Config.googleProject, Config.environment + "-updater");
+                var resource = new MonitoredResource {Type = "project"};
+                var logEntry = new LogEntry
+                {
+                    LogName = logName.ToString(),
+                    Severity = severity,
+                    TextPayload = message
+                };
 
-            logEntry.Labels.Add("env", Config.environment);
+                logEntry.Labels.Add("env", Config.environment);
 
-            googleCLient.WriteLogEntries(LogNameOneof.From(logName), resource, null, new[] {logEntry});
+                googleCLient.WriteLogEntries(LogNameOneof.From(logName), resource, null, new[] {logEntry});
+            }
         }
     }
 }
