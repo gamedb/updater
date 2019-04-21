@@ -11,6 +11,8 @@ namespace Updater.Consumers
     {
         protected override async Task HandleMessage(BaseMessage payload)
         {
+            payload.OriginalQueue = queue_cs_profiles;
+
             // Remove any keys that can't be deserialised
             var json = JObject.Parse(JsonConvert.SerializeObject(payload.Message));
             var key = json.Property("PICSProfileInfo");
