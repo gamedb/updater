@@ -31,7 +31,7 @@ namespace Updater
 
         private static void log(String message, LogSeverity severity)
         {
-            message = $"{DateTime.Now:yyyy:MM:dd HH:mm:ss} - {severity} - {message}";
+            message = $"{DateTime.Now:HH:mm:ss} {severity} - {message}";
 
             Console.WriteLine(message);
 
