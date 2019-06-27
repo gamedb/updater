@@ -21,6 +21,12 @@ namespace Updater.Consumers
             // Get the message in the payload
             var message = JsonConvert.DeserializeObject<ProfileMessage>(json.ToString());
 
+            // Validation
+            if (message.ID.ToString().Length != 17)
+            {
+                return;
+            }
+
             // Get profile data
             var id = new SteamID();
             id.SetFromUInt64(message.ID);
