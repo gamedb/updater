@@ -146,6 +146,13 @@ namespace Updater.Consumers
 
                 // Consume message
                 var task = HandleMessage(payload);
+                if (task.Exception is AggregateException)
+                {
+                    Log.Info(task.Exception + " - " + task.Exception.InnerException);
+                    payload.ack(channel, msg);
+                    return;
+                }
+
                 if (task.Exception != null)
                 {
                     Log.Error(task.Exception + " - " + task.Exception.InnerException);
