@@ -1,5 +1,12 @@
 {
   "extends": [
     "config:base"
+  ],
+  "assignees": [
+    "Jleagle"
+  ],
+  "bumpVersion": "patch",
+  "schedule": [
+    "on sunday"
   ]
 }
