@@ -153,13 +153,6 @@ namespace Updater.Consumers
                     return;
                 }
 
-                if (task.Exception is AggregateException)
-                {
-                    Log.Error(task.Exception + " - " + task.Exception.InnerException);
-                    payload.ack(channel, msg);
-                    return;
-                }
-
                 if (task.Exception != null)
                 {
                     Log.Error(task.Exception + " - " + task.Exception.InnerException);
