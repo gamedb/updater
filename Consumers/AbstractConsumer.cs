@@ -153,7 +153,7 @@ namespace Updater.Consumers
                     return;
                 }
 
-                if (task.Exception is JsonSerializationException)
+                if (task.Exception is AggregateException)
                 {
                     Log.Error(task.Exception + " - " + task.Exception.InnerException);
                     payload.ack(channel, msg);
